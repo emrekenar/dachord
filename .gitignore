@@ -1,0 +1,5 @@
+.vscode/*
+
+backend/bin/*
+backend/obj/*
+backend/Properties/*
