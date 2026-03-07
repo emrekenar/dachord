@@ -3,3 +3,9 @@
 backend/bin/*
 backend/obj/*
 backend/Properties/*
+
+frontend-web/node_modules/*
+frontend-web/build/*
+
+node_modules/*
+

@@ -1,0 +1,99 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.app-header {
+  background: #232946;
+  color: #fff;
+  padding: 1.5rem 0 1rem 0;
+  margin-bottom: 2rem;
+  border-radius: 10px;
+}
+.app-header h1 {
+  margin: 0 0 0.5rem 0;
+  font-size: 2.5rem;
+  letter-spacing: 2px;
+}
+.app-header nav {
+  margin-top: 0.5rem;
+}
+.app-header nav a {
+  color: #eebbc3;
+  text-decoration: none;
+  margin: 0 1rem;
+  font-weight: 500;
+  font-size: 1.1rem;
+  transition: color 0.2s;
+}
+.app-header nav a:hover {
+  color: #ffd803;
+}
+
+.tracks-list, .track-detail, .submit-chord-page {
+  background: #f4f6fb;
+  border-radius: 10px;
+  padding: 2rem;
+  margin: 0 auto 2rem auto;
+  max-width: 600px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  color: #232946;
+}
+.tracks-list ul {
+  list-style: none;
+  padding: 0;
+}
+.tracks-list li {
+  margin: 0.5rem 0;
+}
+.tracks-list a {
+  color: #232946;
+  text-decoration: underline;
+  font-weight: 500;
+}
+.tracks-list a:hover {
+  color: #eebbc3;
+}
+.track-detail pre {
+  background: #232946;
+  color: #ee5d5d;
+  padding: 1rem;
+  border-radius: 6px;
+  text-align: left;
+  overflow-x: auto;
+}
+.submit-chords-form label {
+  display: block;
+  margin: 1rem 0 0.3rem 0;
+  font-weight: 500;
+}
+.submit-chords-form input,
+.submit-chords-form textarea {
+  width: 100%;
+  padding: 0.7rem;
+  border-radius: 6px;
+  border: 1px solid #b8c1ec;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+.submit-chords-form button {
+  background: #eebbc3;
+  color: #232946;
+  border: none;
+  padding: 0.7rem 2rem;
+  border-radius: 6px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.submit-chords-form button:hover {
+  background: #ffd803;
+}
+.submit-message {
+  margin-top: 1rem;
+  color: #232946;
+  font-weight: 500;
+}
