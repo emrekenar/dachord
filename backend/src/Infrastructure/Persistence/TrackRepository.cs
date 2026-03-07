@@ -7,8 +7,11 @@ public class TrackRepository : ITrackRepository
 {
     private readonly Dictionary<int, Track> tracks = new();
 
+    private int _nextId = 0;
+
     public Task SaveAsync(Track track)
     {
+        track.Id = _nextId++;
         tracks[track.Id] = track;
         return Task.CompletedTask;
     }
