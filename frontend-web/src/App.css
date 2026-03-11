@@ -32,7 +32,7 @@
   color: #ffd803;
 }
 
-.tracks-list, .track-detail, .submit-chord-page {
+.tracks-list, .track-detail, .submit-chord-page, .login-page, .register-page {
   background: #f4f6fb;
   border-radius: 10px;
   padding: 2rem;

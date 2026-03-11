@@ -16,11 +16,16 @@ export default function SubmitChord() {
     };
     fetch('https://localhost:7266/tracks', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json', 
+        'Authorization': `Bearer ${localStorage.getItem('token')}` 
+      },
       body: JSON.stringify(data)
     })
       .then(res => {
         if (res.ok) setMessage('Track submitted!');
+        else if (res.status === 401) setMessage('Please login to submit a track.');
+        else if (res.status === 400) setMessage('Invalid track data.');
         else setMessage('Failed to submit track.');
       })
       .catch(() => setMessage('Failed to submit track.'));
