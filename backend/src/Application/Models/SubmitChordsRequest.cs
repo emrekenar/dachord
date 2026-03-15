@@ -1,8 +1,8 @@
-namespace Application.DTOs;
+namespace Application.Models;
 
 using Domain.Models;
 
-public class TrackDto
+public class SubmitChordsRequest
 {
     public string Title { get; set; } = string.Empty;
     public string? Artist { get; set; }

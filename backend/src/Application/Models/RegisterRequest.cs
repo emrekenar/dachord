@@ -1,6 +1,6 @@
-namespace Application.DTOs;
+namespace Application.Models;
 
-public class RegisterDto
+public class RegisterRequest
 {
     public string Email { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
