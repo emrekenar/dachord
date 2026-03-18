@@ -4,11 +4,11 @@ using System.Text;
 
 using Domain.Interfaces;
 using Infrastructure.Persistence;
-using Application.Models;
-using Infrastructure.Configuration;
+using Application.Requests;
 using Application.Interfaces;
 using Infrastructure.External;
 using Application.Services;
+using Application.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 

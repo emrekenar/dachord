@@ -1,8 +1,8 @@
 .vscode/*
 
-backend/bin/*
-backend/obj/*
-backend/Properties/*
+backend/**/bin/*
+backend/**/obj/*
+backend/**/Properties/*
 
 frontend-web/node_modules/*
 frontend-web/build/*

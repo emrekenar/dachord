@@ -1,4 +1,4 @@
-namespace Infrastructure.Configuration;
+namespace Application.Configuration;
 
 public class SpotifyOptions
 {

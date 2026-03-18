@@ -1,8 +1,10 @@
 namespace Application.Interfaces;
 
-using Application.Models;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Application.Requests;
+using Application.Responses;
 
 public interface ILoginService
 {
-    Task<IResult> ExecuteAsync(LoginRequest request);
+    Task<Results<Ok<LoginResponse>, UnauthorizedHttpResult>> ExecuteAsync(LoginRequest request);
 }

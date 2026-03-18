@@ -1,6 +1,7 @@
 namespace Application.Interfaces;
 
-using Application.Models;
+using Microsoft.AspNetCore.Http;
+using Application.Requests;
 
 public interface ISubmitChordsService
 {

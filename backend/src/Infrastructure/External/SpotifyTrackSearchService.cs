@@ -1,12 +1,15 @@
 namespace Infrastructure.External;
 
+using Microsoft.AspNetCore.Http;
 using System.Text.Json;
 using Application.Interfaces;
-using Application.Models;
+using Application.Requests;
+using Application.Responses;
 using Infrastructure.Configuration;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using System.Net.Http.Headers;
+using Application.Configuration;
 
 public class SpotifySearchTracksService : ISearchTracksService
 {

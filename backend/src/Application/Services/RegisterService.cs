@@ -1,7 +1,8 @@
 namespace Application.Services;
 
+using Microsoft.AspNetCore.Http;
 using Application.Interfaces;
-using Application.Models;
+using Application.Requests;
 using Domain.Interfaces;
 using Domain.Models;
 
