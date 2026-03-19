@@ -29,7 +29,7 @@ public class LoginServiceTests
         var userRepo = Substitute.For<IUserRepository>();
         var user = new User
         {
-            Id = 100,
+            Id = "existing-user-id",
             Email = "existing@example.com",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword("correct-password"),
         };
