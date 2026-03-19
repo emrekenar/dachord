@@ -2,28 +2,86 @@ namespace Infrastructure.Persistence;
 
 using Domain.Models;
 using Domain.Interfaces;
+using Amazon.DynamoDBv2;
+using Amazon.DynamoDBv2.Model;
+using Microsoft.Extensions.Options;
+using Infrastructure.Configuration;
+using System.Text.Json;
 
 public class TrackRepository : ITrackRepository
 {
-    private readonly Dictionary<int, Track> tracks = new();
+    private readonly IAmazonDynamoDB _dynamoDb;
+    private readonly DynamoDbOptions _options;
 
-    private int _nextId = 0;
-
-    public Task SaveAsync(Track track)
+    public TrackRepository(IAmazonDynamoDB dynamoDb, IOptions<DynamoDbOptions> options)
     {
-        track.Id = _nextId++;
-        tracks[track.Id] = track;
-        return Task.CompletedTask;
+        _dynamoDb = dynamoDb;
+        _options = options.Value;
     }
 
-    public Task<Track?> GetByIdAsync(int id)
+    public async Task SaveAsync(Track track)
     {
-        tracks.TryGetValue(id, out var track);
-        return Task.FromResult(track);
+        var id = string.IsNullOrEmpty(track.Id) ? Guid.NewGuid().ToString() : track.Id;
+
+        var item = new Dictionary<string, AttributeValue>
+        {
+            ["Id"] = new AttributeValue { S = id },
+            ["Type"] = new AttributeValue { S = "Track" },
+            ["Title"] = new AttributeValue { S = track.Title },
+            ["Artist"] = new AttributeValue { S = track.Artist ?? string.Empty },
+            ["Lyrics"] = new AttributeValue { S = JsonSerializer.Serialize(track.Lyrics) }
+        };
+        await _dynamoDb.PutItemAsync(new PutItemRequest
+        {
+            TableName = _options.TableName,
+            Item = item
+        });
+        track.Id = id;
     }
 
-    public Task<List<Track>> GetAllAsync()
+    public async Task<Track?> GetByIdAsync(int id)
     {
-        return Task.FromResult(tracks.Values.ToList());
+        var response = await _dynamoDb.GetItemAsync(new GetItemRequest
+        {
+            TableName = _options.TableName,
+            Key = new Dictionary<string, AttributeValue>
+            {
+                ["Id"] = new AttributeValue { S = id.ToString() },
+                ["Type"] = new AttributeValue { S = "Track" }
+            }
+        });
+        if (response.Item == null || response.Item.Count == 0)
+            return null;
+        return MapTrack(response.Item);
+    }
+
+    public async Task<List<Track>> GetAllAsync()
+    {
+        var response = await _dynamoDb.ScanAsync(new ScanRequest
+        {
+            TableName = _options.TableName,
+            FilterExpression = "#type = :type",
+            ExpressionAttributeNames = new Dictionary<string, string>
+            {
+                ["#type"] = "Type"
+            },
+            ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+            {
+                [":type"] = new AttributeValue { S = "Track" }
+            }
+        });
+        return response.Items.Select(MapTrack).ToList();
+    }
+
+    private Track MapTrack(Dictionary<string, AttributeValue> item)
+    {
+        var track = new Track
+        {
+            Id = item["Id"].S,
+            Title = item["Title"].S,
+            Artist = item.ContainsKey("Artist") ? item["Artist"].S : null,
+            Lyrics = item.ContainsKey("Lyrics") ? JsonSerializer.Deserialize<Domain.Models.Lyrics>(item["Lyrics"].S) : null
+        };
+        return track;
     }
 }

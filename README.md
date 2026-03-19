@@ -7,6 +7,9 @@
 `dotnet user-secrets set "Spotify:ClientId" "your_actual_client_id"`
 `dotnet user-secrets set "Spotify:ClientSecret" "your_actual_client_secret"`
 
+### infrastructure
+`docker compose up`
+
 ### backend
 `cd backend && dotnet run`
 

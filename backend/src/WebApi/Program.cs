@@ -3,21 +3,19 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 using Domain.Interfaces;
-using Infrastructure.Persistence;
 using Application.Requests;
 using Application.Interfaces;
 using Infrastructure.External;
 using Application.Services;
 using Application.Configuration;
+using Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddInfrastructure(builder.Configuration);
+
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
 builder.Services.Configure<SpotifyOptions>(builder.Configuration.GetSection(SpotifyOptions.SectionName));
-
-builder.Services.AddSingleton<ITrackRepository, TrackRepository>();
-builder.Services.AddSingleton<IUserRepository, UserRepository>();
-
 builder.Services.AddMemoryCache();
 
 builder.Services.AddScoped<IRegisterService, RegisterService>();
