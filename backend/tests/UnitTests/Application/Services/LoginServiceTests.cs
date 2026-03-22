@@ -2,20 +2,20 @@ using Xunit;
 using FluentAssertions;
 using NSubstitute;
 using Microsoft.Extensions.Options;
-using Microsoft.AspNetCore.Http.HttpResults;
 
-using Application.Services;
-using Application.Requests;
-using Application.Responses;
-using Application.Configuration;
 using Domain.Interfaces;
 using Domain.Models;
+using Domain.Errors;
+using Application.Services;
+using Application.Requests;
+using Application.Configuration;
+using Application.Interfaces;
 
 namespace UnitTests.Application.Services;
 
 public class LoginServiceTests
 {
-    private readonly LoginService _sut;
+    private readonly ILoginService _sut;
     public LoginServiceTests()
     {
         var jwtOptions = Substitute.For<IOptions<JwtOptions>>();
@@ -48,7 +48,9 @@ public class LoginServiceTests
         var result = await _sut.ExecuteAsync(request);
 
         // Assert
-        result.Result.Should().BeOfType<UnauthorizedHttpResult>();
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().NotBeNull();
+        result.Error.Code.Should().Be(ErrorCode.InvalidCredentials);
     }
 
     [Fact]
@@ -61,7 +63,9 @@ public class LoginServiceTests
         var result = await _sut.ExecuteAsync(request);
 
         // Assert
-        result.Result.Should().BeOfType<UnauthorizedHttpResult>();
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().NotBeNull();
+        result.Error.Code.Should().Be(ErrorCode.InvalidCredentials);
     }
 
     [Fact]
@@ -74,8 +78,8 @@ public class LoginServiceTests
         var result = await _sut.ExecuteAsync(request);
 
         // Assert
-        var okResult = result.Result.Should().BeOfType<Ok<LoginResponse>>().Subject;
-        okResult.Value.Should().NotBeNull();
-        okResult.Value!.Token.Should().NotBeEmpty();
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.Token.Should().NotBeEmpty();
     }
 }
