@@ -5,10 +5,10 @@ using System.Text;
 using Domain.Interfaces;
 using Application.Requests;
 using Application.Interfaces;
-using Infrastructure.External;
 using Application.Services;
 using Application.Configuration;
 using Infrastructure;
+using Infrastructure.External;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -63,7 +63,7 @@ app.UseAuthorization();
 
 app.MapGet("/", () => "Hello World!");
 
-app.MapGet("/tracks/{id}", async (int id, ITrackRepository trackRepository) =>
+app.MapGet("/tracks/{id}", async (string id, ITrackRepository trackRepository) =>
 {
     var track = await trackRepository.GetByIdAsync(id);
     return track is not null ? Results.Ok(track) : Results.NotFound();
@@ -77,23 +77,27 @@ app.MapGet("/tracks", async (ITrackRepository trackRepository) =>
 
 app.MapPost("/tracks", async (SubmitChordsRequest track, ISubmitChordsService submitChordsService) =>
 {
-    return await submitChordsService.ExecuteAsync(track);
+    var result = await submitChordsService.ExecuteAsync(track);
+    return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
 })
 .RequireAuthorization();
 
 app.MapPost("/register", async (RegisterRequest request, IRegisterService registerService) =>
 {
-    return await registerService.ExecuteAsync(request);
+    var result = await registerService.ExecuteAsync(request);
+    return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
 });
 
 app.MapPost("/login", async (LoginRequest request, ILoginService loginService) =>
 {
-    return await loginService.ExecuteAsync(request);
+    var result = await loginService.ExecuteAsync(request);
+    return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
 });
 
 app.MapPost("/search", async (TrackSearchRequest request, ISearchTracksService trackSearchService) =>
 {
-    return await trackSearchService.ExecuteAsync(request);
+    var result = await trackSearchService.ExecuteAsync(request);
+    return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
 });
 
 app.Run();

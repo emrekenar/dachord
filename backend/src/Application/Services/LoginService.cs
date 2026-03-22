@@ -1,27 +1,28 @@
 namespace Application.Services;
 
-using Microsoft.AspNetCore.Http;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Options;
+using System.Text;
+using System.IdentityModel.Tokens.Jwt;
+
+using Domain.Interfaces;
+using Domain.Errors;
+using Domain.Wrappers;
 using Application.Interfaces;
 using Application.Requests;
 using Application.Responses;
-using Domain.Interfaces;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using Microsoft.Extensions.Options;
 using Application.Configuration;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.AspNetCore.Http.HttpResults;
 
 public class LoginService(IOptions<JwtOptions> jwtOptions, IUserRepository userRepository) : ILoginService
 {
     private readonly JwtOptions _jwtOptions = jwtOptions.Value;
 
-    public async Task<Results<Ok<LoginResponse>, UnauthorizedHttpResult>> ExecuteAsync(LoginRequest request)
+    public async Task<Result<LoginResponse>> ExecuteAsync(LoginRequest request)
     {
         var user = await userRepository.GetByEmailAsync(request.Email);
         if (user is null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
         {
-            return TypedResults.Unauthorized();
+            return Result<LoginResponse>.Failure(new Error(ErrorCode.InvalidCredentials, "Invalid email or password."));
         }
 
         var key = Encoding.ASCII.GetBytes(_jwtOptions.Key);
@@ -43,6 +44,6 @@ public class LoginService(IOptions<JwtOptions> jwtOptions, IUserRepository userR
         var tokenString = tokenHandler.WriteToken(token);
 
         var responseValue = new LoginResponse { Token = tokenString };
-        return TypedResults.Ok(responseValue);
+        return Result<LoginResponse>.Success(responseValue);
     }
 }

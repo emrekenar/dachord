@@ -1,28 +1,30 @@
 namespace Application.Services;
 
-using Microsoft.AspNetCore.Http;
-using Application.Interfaces;
-using Application.Requests;
 using Domain.Interfaces;
 using Domain.Models;
+using Domain.Wrappers;
+using Domain.Errors;
+using Application.Interfaces;
+using Application.Requests;
 
 public class RegisterService(IUserRepository userRepository) : IRegisterService
 {
-    public async Task<IResult> ExecuteAsync(RegisterRequest request)
+    public async Task<Result<User>> ExecuteAsync(RegisterRequest request)
     {
         var existingUser = await userRepository.GetByEmailAsync(request.Email);
         if (existingUser is not null)
         {
-            return Results.BadRequest("User already exists.");
+            return Result<User>.Failure(new Error(ErrorCode.UserAlreadyExists, "User with this email already exists."));
         }
 
         var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
         var user = new User
         {
+            Id = Guid.NewGuid().ToString(),
             Email = request.Email,
             PasswordHash = passwordHash
         };
         await userRepository.CreateUserAsync(user);
-        return Results.Created($"/users/{user.Id}", user);
+        return Result<User>.Success(user);
     }
 }

@@ -1,15 +1,16 @@
 namespace Infrastructure.External;
 
-using Microsoft.AspNetCore.Http;
 using System.Text.Json;
+using System.Net.Http.Headers;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
+
+using Domain.Wrappers;
 using Application.Interfaces;
 using Application.Requests;
 using Application.Responses;
-using Infrastructure.Configuration;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Options;
-using System.Net.Http.Headers;
 using Application.Configuration;
+using Infrastructure.Configuration;
 
 public class SpotifySearchTracksService : ISearchTracksService
 {
@@ -55,7 +56,7 @@ public class SpotifySearchTracksService : ISearchTracksService
         return tokenResponse.AccessToken;
     }
 
-    public async Task<IResult> ExecuteAsync(TrackSearchRequest request)
+    public async Task<Result<IEnumerable<TrackResponse>>> ExecuteAsync(TrackSearchRequest request)
     {
         var token = await GetAccessTokenFromCacheAsync();
 
@@ -70,7 +71,7 @@ public class SpotifySearchTracksService : ISearchTracksService
 
         var content = await spotifyResponse.Content.ReadAsStringAsync();
         var response = MapSpotifyToResponse(content);
-        return Results.Ok(response);
+        return Result<IEnumerable<TrackResponse>>.Success(response);
     }
 
     private IEnumerable<TrackResponse> MapSpotifyToResponse(string json)
@@ -83,7 +84,7 @@ public class SpotifySearchTracksService : ISearchTracksService
             {
                 Id = item.GetProperty("id").GetString()!,
                 Title = item.GetProperty("name").GetString()!,
-                Artist = item.GetProperty("artists")[0].GetProperty("name").GetString(),
+                Artist = item.GetProperty("artists")[0].GetProperty("name").GetString()!,
                 Url = item.GetProperty("external_urls").GetProperty("spotify").GetString()!
             })
             .ToList();

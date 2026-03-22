@@ -1,10 +1,9 @@
 using Amazon.DynamoDBv2;
-using Amazon;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Configuration;
-using Infrastructure.Configuration;
+
 using Domain.Interfaces;
+using Infrastructure.Configuration;
 using Infrastructure.Persistence;
 
 namespace Infrastructure;

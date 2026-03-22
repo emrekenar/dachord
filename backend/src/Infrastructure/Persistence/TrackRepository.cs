@@ -1,12 +1,13 @@
 namespace Infrastructure.Persistence;
 
-using Domain.Models;
-using Domain.Interfaces;
+using System.Text.Json;
+using Microsoft.Extensions.Options;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
-using Microsoft.Extensions.Options;
+
+using Domain.Models;
+using Domain.Interfaces;
 using Infrastructure.Configuration;
-using System.Text.Json;
 
 public class TrackRepository : ITrackRepository
 {
@@ -28,7 +29,7 @@ public class TrackRepository : ITrackRepository
             ["Id"] = new AttributeValue { S = id },
             ["Type"] = new AttributeValue { S = "Track" },
             ["Title"] = new AttributeValue { S = track.Title },
-            ["Artist"] = new AttributeValue { S = track.Artist ?? string.Empty },
+            ["Artist"] = new AttributeValue { S = track.Artist },
             ["Lyrics"] = new AttributeValue { S = JsonSerializer.Serialize(track.Lyrics) }
         };
         await _dynamoDb.PutItemAsync(new PutItemRequest
@@ -39,14 +40,14 @@ public class TrackRepository : ITrackRepository
         track.Id = id;
     }
 
-    public async Task<Track?> GetByIdAsync(int id)
+    public async Task<Track?> GetByIdAsync(string id)
     {
         var response = await _dynamoDb.GetItemAsync(new GetItemRequest
         {
             TableName = _options.TableName,
             Key = new Dictionary<string, AttributeValue>
             {
-                ["Id"] = new AttributeValue { S = id.ToString() },
+                ["Id"] = new AttributeValue { S = id },
                 ["Type"] = new AttributeValue { S = "Track" }
             }
         });
@@ -79,8 +80,8 @@ public class TrackRepository : ITrackRepository
         {
             Id = item["Id"].S,
             Title = item["Title"].S,
-            Artist = item.ContainsKey("Artist") ? item["Artist"].S : null,
-            Lyrics = item.ContainsKey("Lyrics") ? JsonSerializer.Deserialize<Domain.Models.Lyrics>(item["Lyrics"].S) : null
+            Artist = item.ContainsKey("Artist") ? item["Artist"].S : string.Empty,
+            Lyrics = item.ContainsKey("Lyrics") ? JsonSerializer.Deserialize<Lyrics>(item["Lyrics"].S) : null
         };
         return track;
     }

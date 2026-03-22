@@ -1,10 +1,11 @@
 namespace Infrastructure.Persistence;
 
-using Domain.Interfaces;
-using Domain.Models;
+using Microsoft.Extensions.Options;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
-using Microsoft.Extensions.Options;
+
+using Domain.Interfaces;
+using Domain.Models;
 using Infrastructure.Configuration;
 
 public class UserRepository : IUserRepository

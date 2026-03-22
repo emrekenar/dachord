@@ -1,9 +1,10 @@
 namespace Application.Interfaces;
 
-using Microsoft.AspNetCore.Http;
+using Domain.Wrappers;
 using Application.Requests;
+using Application.Responses;
 
 public interface ISubmitChordsService
 {
-    Task<IResult> ExecuteAsync(SubmitChordsRequest request);
+    Task<Result<TrackResponse>> ExecuteAsync(SubmitChordsRequest request);
 }

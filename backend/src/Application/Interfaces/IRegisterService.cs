@@ -1,9 +1,10 @@
 namespace Application.Interfaces;
 
-using Microsoft.AspNetCore.Http;
+using Domain.Models;
+using Domain.Wrappers;
 using Application.Requests;
 
 public interface IRegisterService
 {
-    Task<IResult> ExecuteAsync(RegisterRequest request);
+    Task<Result<User>> ExecuteAsync(RegisterRequest request);
 }
