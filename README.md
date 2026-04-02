@@ -1,5 +1,13 @@
 # dachord Chord Application
 
+## Running tests
+
+### unit tests
+`dotnet test backend/tests/UnitTests/UnitTests.csproj`
+
+### integration tests (ensure Docker daemon is running)
+`dotnet test backend/tests/Integration/IntegrationTests.csproj`
+
 ## Running locally
 
 ### configuration

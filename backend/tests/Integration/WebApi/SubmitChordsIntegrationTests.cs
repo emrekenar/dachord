@@ -11,6 +11,9 @@ public class SubmitChordsIntegrationTests : IClassFixture<IntegrationFixture>
 {   
     private readonly IntegrationFixture _fixture;
 
+    private static readonly string Endpoint = "/tracks";
+    private static readonly HttpMethod Method = HttpMethod.Post;
+
     public SubmitChordsIntegrationTests(IntegrationFixture fixture)
     {
         _fixture = fixture;
@@ -20,22 +23,59 @@ public class SubmitChordsIntegrationTests : IClassFixture<IntegrationFixture>
     public async Task SubmitChords_WithoutToken_ShouldReturnUnauthorized()
     {
         // Arrange
-        var request = new SubmitChordsRequest
-        {
-            Title = "Test Track",
-            Artist = "Test Artist",
-            Lyrics = new Lyrics
-            {
-                Content = "Test lyrics content",
-                Chords = new Dictionary<int, List<Chord>>(),
-                Language = "en",
-            }
-        };
+        var request = BuildRequest();
 
         // Act
-        var response = await _fixture.Client.PostAsJsonAsync("/tracks", request);
+        var response = await _fixture.SendRequestAsync(Method, Endpoint, request);
 
         // Assert
         response.StatusCode.Should().Be(System.Net.HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task SubmitChords_WithInvalidToken_ShouldReturnUnauthorized()
+    {
+        // Arrange
+        var request = BuildRequest();
+
+        // Act
+        var response = await _fixture.SendRequestAsync(Method, Endpoint, request, "InvalidToken");
+
+        // Assert
+        response.StatusCode.Should().Be(System.Net.HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task SubmitChords_ValidRequest_ShouldReturnSuccess()
+    {
+        // Arrange
+        var request = BuildRequest();
+
+        // Act
+        var response = await _fixture.SendRequestAsAuthenticatedUserAsync(Method, Endpoint, request);
+
+        // Assert
+        response.StatusCode.Should().Be(System.Net.HttpStatusCode.OK);
+    }
+
+    private SubmitChordsRequest BuildRequest(
+        string? title = null, 
+        string? artist = null, 
+        string? lyricsContent = null, 
+        Dictionary<int, List<Chord>>? chords = null, 
+        string? language = null)
+    {
+        var request = new SubmitChordsRequest
+        {
+            Title = title ?? "Test Track",
+            Artist = artist ?? "Test Artist",
+            Lyrics = new Lyrics
+            {
+                Content = lyricsContent ?? "Test lyrics content\nWith multiple lines.",
+                Chords = chords ?? new Dictionary<int, List<Chord>>(),
+                Language = language ?? "en",
+            }
+        };
+        return request;
     }
 }

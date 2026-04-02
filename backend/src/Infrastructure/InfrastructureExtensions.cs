@@ -13,19 +13,23 @@ public static class InfrastructureExtensions
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         var dynamoDbSection = configuration.GetSection("DynamoDb");
-        
         var options = new DynamoDbOptions();
         dynamoDbSection.Bind(options);
-        
         services.Configure<DynamoDbOptions>(dynamoDbSection);
 
-        var awsOptions = configuration.GetAWSOptions(); 
-        services.AddDefaultAWSOptions(awsOptions);
-        services.AddAWSService<IAmazonDynamoDB>();
+        var awsServiceUrl = configuration["AWS:ServiceURL"];
+        var awsAccessKey = configuration["AWS:AccessKey"];
+        var awsSecretKey = configuration["AWS:SecretKey"];
+
+        services.AddSingleton<IAmazonDynamoDB>(sp =>
+            new AmazonDynamoDBClient(
+                new Amazon.Runtime.BasicAWSCredentials(awsAccessKey, awsSecretKey),
+                new AmazonDynamoDBConfig { ServiceURL = awsServiceUrl }
+            )
+        );
 
         services.AddSingleton<ITrackRepository, TrackRepository>();
         services.AddSingleton<IUserRepository, UserRepository>();
-        
         return services;
     }
 }

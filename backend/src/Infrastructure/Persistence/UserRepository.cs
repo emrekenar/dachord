@@ -41,8 +41,7 @@ public class UserRepository : IUserRepository
         {
             TableName = _options.TableName,
             IndexName = "EmailIndex",
-            KeyConditionExpression = "Email = :email",
-            FilterExpression = "#type = :type",
+            KeyConditionExpression = "Email = :email AND #type = :type",
             ExpressionAttributeNames = new Dictionary<string, string>
             {
                 ["#type"] = "Type"
