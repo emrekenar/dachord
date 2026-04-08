@@ -16,6 +16,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
 builder.Services.Configure<SpotifyOptions>(builder.Configuration.GetSection(SpotifyOptions.SectionName));
+builder.Services.Configure<MusicTheoryOptions>(builder.Configuration.GetSection(MusicTheoryOptions.SectionName));
 builder.Services.AddMemoryCache();
 
 builder.Services.AddScoped<IRegisterService, RegisterService>();
