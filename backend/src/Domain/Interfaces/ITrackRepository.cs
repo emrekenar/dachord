@@ -1,10 +1,12 @@
 namespace Domain.Interfaces;
 
-using Domain.Models;
+using Domain.Models.Track;
 
 public interface ITrackRepository
 {
-    Task SaveAsync(Track track);
-    Task<Track?> GetByIdAsync(string id);
-    Task<List<Track>> GetAllAsync();
+    Task SaveTrackAsync(Track track);
+    Task<Track?> GetTrackAsync(string id);
+
+    Task SaveTrackVersionAsync(TrackVersion trackVersion);
+    Task<TrackVersion?> GetTrackVersionAsync(string id);
 }
