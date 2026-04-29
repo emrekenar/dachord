@@ -1,6 +1,6 @@
 namespace Application.Interfaces;
 
-using Domain.Models;
+using Domain.Models.User;
 using Domain.Wrappers;
 using Application.Requests;
 

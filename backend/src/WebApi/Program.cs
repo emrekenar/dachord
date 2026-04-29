@@ -7,6 +7,9 @@ ServiceConfiguration.ConfigureServices(builder);
 
 var app = builder.Build();
 
+if (app.Environment.IsDevelopment())
+    app.UseDeveloperExceptionPage();
+
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();

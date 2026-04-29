@@ -4,10 +4,11 @@ using Xunit;
 
 using Domain.Errors;
 using Domain.Interfaces;
-using Domain.Models;
 using Application.Interfaces;
 using Application.Requests;
 using Application.Services;
+using Domain.Models.User;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace UnitTests.Application.Services;
 
@@ -22,18 +23,20 @@ public class RegisterServiceTests
         {
             Id = "existing-user-id",
             Email = "existing@example.com",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("correct-password"),
+            PasswordHash = SecurityService.HashPassword("correct-password"),
         };
         userRepo.GetByEmailAsync("existing@example.com").Returns(user);
 
-        _sut = new RegisterService(userRepo);
+        var logger = NullLogger<RegisterService>.Instance;
+
+        _sut = new RegisterService(userRepo, logger);
     }
 
     [Fact]
     public async Task ExecuteAsync_ShouldReturnBadRequest_WhenUserAlreadyExists()
     {
         // Arrange
-        var request = new RegisterRequest { Email = "existing@example.com" };
+        var request = new RegisterRequest { Email = "existing@example.com", Password = "password" };
 
         // Act
         var result = await _sut.ExecuteAsync(request);

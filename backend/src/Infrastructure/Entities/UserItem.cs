@@ -29,10 +29,10 @@ public class UserItem
 
 public enum UserRoleEnum
 {
-    [DynamoDBProperty("USER")]
+    [DynamoDBProperty("User")]
     User,
 
-    [DynamoDBProperty("MODERATOR")]
+    [DynamoDBProperty("Moderator")]
     Moderator
 }
 

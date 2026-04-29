@@ -3,7 +3,7 @@ using FluentAssertions;
 using IntegrationTests.TestInfrastructure;
 
 using Application.Requests;
-using Domain.Models;
+using Domain.Models.Track;
 
 namespace IntegrationTests.WebApi;
 
@@ -59,22 +59,36 @@ public class SubmitChordsIntegrationTests : IClassFixture<IntegrationFixture>
     }
 
     private SubmitChordsRequest BuildRequest(
-        string? title = null, 
-        string? artist = null, 
-        string? lyricsContent = null, 
-        Dictionary<int, List<Chord>>? chords = null, 
-        string? language = null)
+        string? trackId = IntegrationFixture.ExistingTrackId,
+        string? contributorId = IntegrationFixture.ExistingTestUserId,
+        string? contributorName = IntegrationFixture.ExistingTestUserDisplayName,
+        string? contributorEmail = IntegrationFixture.ExistingTestUserEmail,
+        List<Section>? content = null)
     {
         var request = new SubmitChordsRequest
         {
-            Title = title ?? "Test Track",
-            Artist = artist ?? "Test Artist",
-            Lyrics = new Lyrics
-            {
-                Content = lyricsContent ?? "Test lyrics content\nWith multiple lines.",
-                Chords = chords ?? new Dictionary<int, List<Chord>>(),
-                Language = language ?? "en",
-            }
+            TrackId = trackId!,
+            ContributorId = contributorId!,
+            ContributorName = contributorName,
+            ContributorEmail = contributorEmail,
+            Content = content ?? [
+                new Section
+                {
+                    Type = "Verse",
+                    Lines = [
+                        new Line
+                        {
+                            Lyrics = "This is Line 1",
+                            Chords = { ["0"] = "Em", ["8"] = "D" },
+                        },
+                        new Line
+                        {
+                            Lyrics = "This is Line 2",
+                            Chords = { ["5"] = "C", ["7"] = "Em" },
+                        },
+                    ]
+                }
+            ]
         };
         return request;
     }

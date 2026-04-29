@@ -3,6 +3,6 @@ namespace Domain.Models.Track;
 public class Line
 {
     public string Lyrics { get; set; } = string.Empty;
-    // Index 0: "C", Index 10: "G" (Chords placed at specific character positions)
-    public Dictionary<int, string> Chords { get; set; } = new();
+    // Keys are character positions as strings, e.g. "0": "C", "10": "G"
+    public Dictionary<string, string> Chords { get; set; } = new();
 }

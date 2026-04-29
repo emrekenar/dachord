@@ -1,13 +1,17 @@
+namespace Infrastructure.Entities;
+
 using Amazon.DynamoDBv2.DataModel;
 using Domain.Models.Track;
 
-namespace Infrastructure.Entities;
 
 [DynamoDBTable("Tracks")]
 public class TrackItem
 {
     [DynamoDBHashKey]
     public required string TrackId { get; set; }
+
+    [DynamoDBRangeKey("SK")]
+    public string SortKey { get; set; } = string.Empty;
 
     // Track fields
     [DynamoDBProperty]

@@ -5,12 +5,12 @@ using System.Net.Http.Headers;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 
-using Domain.Wrappers;
 using Application.Interfaces;
 using Application.Requests;
 using Application.Responses;
 using Application.Configuration;
 using Infrastructure.Configuration;
+using Domain.Models.Track;
 
 public class SpotifySearchTracksService : ISearchTracksService
 {
@@ -27,7 +27,7 @@ public class SpotifySearchTracksService : ISearchTracksService
 
     private async Task<string> GetAccessTokenFromCacheAsync()
     {
-        if (_accessTokenCache.TryGetValue("SpotifyAccessToken", out string token))
+        if (_accessTokenCache.TryGetValue("SpotifyAccessToken", out string? token) && token != null)
         {
             return token;
         }
@@ -56,7 +56,7 @@ public class SpotifySearchTracksService : ISearchTracksService
         return tokenResponse.AccessToken;
     }
 
-    public async Task<Result<IEnumerable<TrackResponse>>> ExecuteAsync(TrackSearchRequest request)
+    public async Task<SearchTracksResponse> QueryAsync(TrackSearchRequest request)
     {
         var token = await GetAccessTokenFromCacheAsync();
 
@@ -71,10 +71,65 @@ public class SpotifySearchTracksService : ISearchTracksService
 
         var content = await spotifyResponse.Content.ReadAsStringAsync();
         var response = MapSpotifyToResponse(content);
-        return Result<IEnumerable<TrackResponse>>.Success(response);
+        return response;
     }
 
-    private IEnumerable<TrackResponse> MapSpotifyToResponse(string json)
+    public async Task<Track?> GetTrackAsync(string id)
+    {
+        var token = await GetAccessTokenFromCacheAsync();
+        var url = $"{_options.BaseUrl}/v1/tracks/{id}";
+        var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var response = await _httpClient.SendAsync(request);
+        if (!response.IsSuccessStatusCode)
+            return null;
+
+        var content = await response.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(content);
+        var root = doc.RootElement;
+        return new Track
+        {
+            Id = root.GetProperty("id").GetString()!,
+            Title = root.GetProperty("name").GetString()!,
+            ArtistId = root.GetProperty("artists")[0].GetProperty("id").GetString()!,
+            ArtistName = root.GetProperty("artists")[0].GetProperty("name").GetString()!,
+            AlbumId = root.GetProperty("album").GetProperty("id").GetString()!,
+            AlbumName = root.GetProperty("album").GetProperty("name").GetString()!,
+        };
+    }
+
+    public async Task<SearchTracksResponse> GetTracksInAlbum(string albumId)
+    {
+        var token = await GetAccessTokenFromCacheAsync();
+        var url = $"{_options.BaseUrl}/v1/albums/{albumId}/tracks";
+        var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var response = await _httpClient.SendAsync(request);
+        if (!response.IsSuccessStatusCode)
+            return new SearchTracksResponse([]);
+
+        var content = await response.Content.ReadAsStringAsync();
+        return MapSpotifyToResponse(content);
+    }
+
+    public async Task<SearchTracksResponse> GetTracksFromArtist(string artistId)
+    {
+        var token = await GetAccessTokenFromCacheAsync();
+        var url = $"{_options.BaseUrl}/v1/artists/{artistId}/top-tracks";
+        var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var response = await _httpClient.SendAsync(request);
+        if (!response.IsSuccessStatusCode)
+            return new SearchTracksResponse([]);
+
+        var content = await response.Content.ReadAsStringAsync();
+        return MapSpotifyToResponse(content);
+    }
+
+    private SearchTracksResponse MapSpotifyToResponse(string json)
     {
         using var doc = JsonDocument.Parse(json);
         var items = doc.RootElement.GetProperty("tracks").GetProperty("items");
@@ -82,12 +137,16 @@ public class SpotifySearchTracksService : ISearchTracksService
         var results = items.EnumerateArray()
             .Select(item => new TrackResponse
             {
-                Id = item.GetProperty("id").GetString()!,
+                TrackId = item.GetProperty("id").GetString()!,
                 Title = item.GetProperty("name").GetString()!,
-                Artist = item.GetProperty("artists")[0].GetProperty("name").GetString()!,
+                ArtistId = item.GetProperty("artists")[0].GetProperty("id").GetString()!,
+                ArtistName = item.GetProperty("artists")[0].GetProperty("name").GetString()!,
+                AlbumId = item.GetProperty("album").GetProperty("id").GetString()!,
+                AlbumName = item.GetProperty("album").GetProperty("name").GetString()!,
                 Url = item.GetProperty("external_urls").GetProperty("spotify").GetString()!
             })
             .ToList();
-        return results;
+        var response = new SearchTracksResponse(results);
+        return response;
     }
 }

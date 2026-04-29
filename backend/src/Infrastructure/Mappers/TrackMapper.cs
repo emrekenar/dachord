@@ -24,6 +24,7 @@ public static class TrackMapper
         return new TrackItem
         {
             TrackId = track.Id,
+            SortKey = TrackEntity.SK,
             Title = track.Title,
             ArtistId = track.ArtistId,
             ArtistName = track.ArtistName,

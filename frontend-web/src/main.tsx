@@ -6,8 +6,9 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import App from './App';
 import Login from './Login/Login';
 import Register from './Register/Register';
+import Search from './Search/Search';
 import SubmitChord from './SubmitTracks/SubmitChord';
-import TracksList from './ListTracks/TracksList';
+import ChordView from './ChordView/ChordView';
 import TrackDetail from './GetTrack/TrackDetail';
 
 createRoot(document.getElementById('root')!).render(
@@ -15,10 +16,11 @@ createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<App />}>
-          <Route index element={<TracksList />} />
+          <Route index element={<Search />} />
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
           <Route path="submit" element={<SubmitChord />} />
+          <Route path="chords/:id" element={<ChordView />} />
           <Route path="track/:id" element={<TrackDetail />} />
         </Route>
       </Routes>

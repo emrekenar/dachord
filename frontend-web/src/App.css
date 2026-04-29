@@ -97,3 +97,155 @@
   color: #232946;
   font-weight: 500;
 }
+
+/* ── Shared search form ───────────────────────────────────────── */
+.search-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+.search-form input {
+  flex: 1;
+  padding: 0.7rem;
+  border-radius: 6px;
+  border: 1px solid #b8c1ec;
+  font-size: 1rem;
+}
+.search-form button {
+  padding: 0.7rem 1.4rem;
+  background: #eebbc3;
+  color: #232946;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+.search-form button:hover:not(:disabled) { background: #ffd803; }
+.search-form button:disabled { opacity: 0.5; cursor: default; }
+
+/* ── Search page ─────────────────────────────────────────────── */
+.search-page {
+  background: #f4f6fb;
+  border-radius: 10px;
+  padding: 2rem;
+  margin: 0 auto 2rem;
+  max-width: 700px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  color: #232946;
+}
+.search-results { display: flex; flex-direction: column; gap: 1rem; }
+.search-result-card {
+  background: #fff;
+  border: 1px solid #b8c1ec;
+  border-radius: 8px;
+  padding: 1rem 1.2rem;
+}
+.track-info { display: flex; flex-direction: column; gap: 0.15rem; margin-bottom: 0.6rem; }
+.track-info strong { font-size: 1.05rem; }
+.artist-name { color: #555; font-size: 0.9rem; }
+.album-name { color: #888; font-size: 0.82rem; font-style: italic; }
+.versions-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.35rem; }
+.version-item { display: flex; align-items: center; gap: 0.6rem; font-size: 0.92rem; }
+.version-item a { color: #232946; font-weight: 500; text-decoration: underline; }
+.version-item a:hover { color: #eebbc3; }
+.like-count { color: #ee5d5d; font-size: 0.85rem; }
+.approved-badge { background: #d4edda; color: #155724; border-radius: 4px; padding: 0.1rem 0.4rem; font-size: 0.78rem; }
+.no-versions { color: #888; font-size: 0.9rem; }
+.no-versions a, .empty-state a { color: #232946; font-weight: 600; }
+.empty-state { color: #555; margin-top: 1rem; }
+
+/* ── Chord view page ─────────────────────────────────────────── */
+.chord-view-page {
+  background: #f4f6fb;
+  border-radius: 10px;
+  padding: 2rem;
+  margin: 0 auto 2rem;
+  max-width: 800px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  color: #232946;
+}
+.chord-view-meta { display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem; color: #555; font-size: 0.9rem; }
+.chord-sheet { font-family: monospace; }
+.chord-section { margin-bottom: 1.8rem; }
+.section-label { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #eebbc3; margin: 0 0 0.5rem; }
+.chord-line-pair { margin-bottom: 0.1rem; }
+.chord-names { margin: 0; color: #ee5d5d; font-weight: 700; font-size: 0.95rem; line-height: 1.4; white-space: pre; }
+.lyric-text { margin: 0 0 0.5rem; color: #232946; font-size: 0.95rem; line-height: 1.4; white-space: pre; }
+.back-link { display: inline-block; margin-top: 1.5rem; color: #232946; font-weight: 500; text-decoration: underline; }
+.back-link:hover { color: #eebbc3; }
+.contributor { color: #555; font-size: 0.9rem; margin: 0; }
+
+/* ── Submit chord page ───────────────────────────────────────── */
+.submit-chord-page {
+  background: #f4f6fb;
+  border-radius: 10px;
+  padding: 2rem;
+  margin: 0 auto 2rem;
+  max-width: 800px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  color: #232946;
+}
+.section-hint { color: #555; margin: 0 0 1rem; }
+
+.track-pick-list { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; }
+.track-pick-item {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 0.1rem;
+  background: #fff; border: 1px solid #b8c1ec; border-radius: 8px;
+  padding: 0.7rem 1rem; cursor: pointer; text-align: left; transition: border-color 0.15s;
+}
+.track-pick-item:hover { border-color: #eebbc3; background: #fff8f9; }
+.track-pick-item strong { font-size: 1rem; color: #232946; }
+.track-pick-item span { font-size: 0.85rem; color: #666; }
+
+.selected-track-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  background: #232946; color: #fff; border-radius: 8px; padding: 0.8rem 1.1rem; margin-bottom: 1.5rem;
+}
+.selected-track-bar strong { font-size: 1rem; display: block; }
+.selected-track-bar span { font-size: 0.85rem; color: #b8c1ec; }
+
+.sections-container { display: flex; flex-direction: column; gap: 1.2rem; margin-bottom: 1.2rem; }
+.section-card { background: #fff; border: 1px solid #b8c1ec; border-radius: 8px; padding: 1rem; }
+.section-header { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.8rem; }
+.section-header select {
+  padding: 0.4rem 0.6rem; border-radius: 6px; border: 1px solid #b8c1ec;
+  font-size: 0.95rem; font-weight: 600; color: #232946; background: #f4f6fb; cursor: pointer;
+}
+
+.line-editor { margin-bottom: 0.8rem; padding-bottom: 0.8rem; border-bottom: 1px solid #e8ecf5; }
+.line-editor:last-of-type { border-bottom: none; }
+.chord-preview-bar {
+  margin: 0 0 0.1rem; padding: 0; font-family: monospace; font-size: 0.9rem;
+  color: #ee5d5d; font-weight: 700; white-space: pre; background: none; line-height: 1.4;
+}
+.line-row { display: flex; gap: 0.4rem; align-items: center; }
+.lyrics-input {
+  flex: 1; padding: 0.5rem 0.7rem; border-radius: 6px; border: 1px solid #b8c1ec;
+  font-family: monospace; font-size: 0.95rem; color: #232946;
+}
+.chord-entries-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.4rem; align-items: center; }
+.chord-entry { display: flex; align-items: center; gap: 0.25rem; background: #f4f6fb; border: 1px solid #b8c1ec; border-radius: 6px; padding: 0.25rem 0.4rem; }
+.chord-name-input { width: 48px; padding: 0.2rem 0.3rem; border-radius: 4px; border: 1px solid #b8c1ec; font-family: monospace; font-size: 0.9rem; text-align: center; font-weight: 700; color: #ee5d5d; }
+.at-label { font-size: 0.75rem; color: #888; }
+.position-input { width: 42px; padding: 0.2rem 0.3rem; border-radius: 4px; border: 1px solid #b8c1ec; font-size: 0.85rem; text-align: center; }
+
+.editor-actions { display: flex; gap: 0.8rem; align-items: center; margin-top: 0.5rem; flex-wrap: wrap; }
+
+/* ── Buttons ─────────────────────────────────────────────────── */
+.btn-ghost { background: transparent; border: 1px solid #b8c1ec; color: #b8c1ec; padding: 0.35rem 0.9rem; border-radius: 6px; cursor: pointer; font-size: 0.88rem; transition: all 0.15s; }
+.btn-ghost:hover { border-color: #ffd803; color: #ffd803; }
+.btn-danger-sm { background: transparent; border: 1px solid #ee5d5d; color: #ee5d5d; padding: 0.3rem 0.7rem; border-radius: 6px; cursor: pointer; font-size: 0.82rem; margin-left: auto; transition: all 0.15s; }
+.btn-danger-sm:hover { background: #ee5d5d; color: #fff; }
+.btn-remove-line, .btn-remove-chord { background: none; border: none; color: #aaa; cursor: pointer; font-size: 1rem; line-height: 1; padding: 0 0.2rem; transition: color 0.15s; }
+.btn-remove-line:hover, .btn-remove-chord:hover { color: #ee5d5d; }
+.btn-add-chord { background: none; border: 1px dashed #b8c1ec; color: #666; padding: 0.2rem 0.6rem; border-radius: 6px; cursor: pointer; font-size: 0.82rem; transition: all 0.15s; }
+.btn-add-chord:hover { border-color: #eebbc3; color: #232946; }
+.btn-add-line { background: none; border: 1px dashed #b8c1ec; color: #666; padding: 0.3rem 0.8rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; margin-top: 0.4rem; transition: all 0.15s; width: 100%; }
+.btn-add-line:hover { border-color: #eebbc3; color: #232946; }
+.btn-add-part { background: #232946; color: #fff; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.95rem; transition: background 0.15s; }
+.btn-add-part:hover { background: #3a4060; }
+.btn-submit { background: #eebbc3; color: #232946; border: none; padding: 0.6rem 1.6rem; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 1rem; transition: background 0.2s; }
+.btn-submit:hover:not(:disabled) { background: #ffd803; }
+.btn-submit:disabled { opacity: 0.5; cursor: default; }

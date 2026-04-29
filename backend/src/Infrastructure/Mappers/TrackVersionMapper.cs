@@ -17,8 +17,8 @@ public static class TrackVersionMapper
             LikeCount = entity.LikeCount ?? 0,
             UpdatedAt = entity.UpdatedAt ?? DateTime.UtcNow,
             IsUpdated = entity.IsUpdated ?? false,
-            ChordsUsed = entity.ChordsUsed ?? new List<string>(),
-            Content = entity.Content ?? new List<Section>(),
+            ChordsUsed = entity.ChordsUsed ?? [],
+            Content = entity.Content ?? [],
         };
     }
 
@@ -27,6 +27,7 @@ public static class TrackVersionMapper
         return new TrackItem
         {
             TrackId = trackVersion.TrackId,
+            SortKey = TrackVersionEntity.SK(trackVersion.ContributorId),
             ContributorId = trackVersion.ContributorId,
             ContributorName = trackVersion.ContributorName,
             ContributorEmail = trackVersion.ContributorEmail,

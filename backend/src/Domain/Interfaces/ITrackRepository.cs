@@ -9,4 +9,5 @@ public interface ITrackRepository
 
     Task SaveTrackVersionAsync(TrackVersion trackVersion);
     Task<TrackVersion?> GetTrackVersionAsync(string id);
+    Task<IEnumerable<TrackVersion>> GetTrackVersionsAsync(string trackId);
 }

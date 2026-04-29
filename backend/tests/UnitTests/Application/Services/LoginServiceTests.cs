@@ -10,6 +10,9 @@ using Application.Services;
 using Application.Requests;
 using Application.Configuration;
 using Application.Interfaces;
+using Domain.Models.User;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace UnitTests.Application.Services;
 
@@ -31,11 +34,13 @@ public class LoginServiceTests
         {
             Id = "existing-user-id",
             Email = "existing@example.com",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("correct-password"),
+            PasswordHash = SecurityService.HashPassword("correct-password"),
         };
         userRepo.GetByEmailAsync("existing@example.com").Returns(user);
 
-        _sut = new LoginService(jwtOptions, userRepo);
+        var logger = NullLogger<LoginService>.Instance;
+
+        _sut = new LoginService(jwtOptions, userRepo, logger);
     }
 
     [Fact]

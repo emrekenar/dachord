@@ -5,4 +5,6 @@ public enum ErrorCode
     UserAlreadyExists,
     InvalidCredentials,
     UserNotFound,
+    TrackNotFound,
+    InvalidRequest,
 }

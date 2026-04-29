@@ -3,10 +3,11 @@ using NSubstitute;
 using Xunit;
 
 using Domain.Interfaces;
-using Domain.Models;
 using Application.Interfaces;
 using Application.Requests;
 using Application.Services;
+using Microsoft.Extensions.Logging.Abstractions;
+using Domain.Models.Track;
 
 namespace UnitTests.Application.Services;
 
@@ -16,8 +17,22 @@ public class SubmitChordsServiceTests
 
     public SubmitChordsServiceTests()
     {
+        var existingTrack = new Track
+        {
+            Id = "track001",
+            Title = "Test track",
+            ArtistId = "artist001",
+            ArtistName = "Test Artist",
+            AlbumId = "album001",
+            AlbumName = "Test Album"
+        };
+
         var trackRepo = Substitute.For<ITrackRepository>();
-        _sut = new SubmitChordsService(trackRepo);
+        trackRepo.GetTrackAsync("track001").Returns(existingTrack);
+
+        var searchTracksService = Substitute.For<ISearchTracksService>();
+        var logger = NullLogger<SubmitChordsService>.Instance;
+        _sut = new SubmitChordsService(trackRepo, searchTracksService, logger);
     }
 
     [Fact]
@@ -26,37 +41,72 @@ public class SubmitChordsServiceTests
         // Arrange
         var request = new SubmitChordsRequest
         {
-            Title = "Test Song",
-            Artist = "Test Artist",
-            Lyrics = new Lyrics
-            {
-                Content = "Test lyrics content",
-                Chords = new Dictionary<int, List<Chord>>
+            TrackId = "track001",
+            ContributorId = "user001",
+            ContributorName = "User 1",
+            ContributorEmail = "user@test.com",
+            Content =
+            [
+                new Section
                 {
-                    { 0, new List<Chord> { new Chord { Signature = "C", Notes = new List<Note> { new Note { Signature = "C" }, new Note { Signature = "E" }, new Note { Signature = "G" } } } } }, 
-                    { 5, new List<Chord> { new Chord { Signature = "G", Notes = new List<Note> { new Note { Signature = "G" }, new Note { Signature = "B" }, new Note { Signature = "D" } } } } }
-                },
-                Language = "en",
-            }
+                    Type = "Verse 1",
+                    Lines =
+                    [
+                        new Line
+                        {
+                            Lyrics = "This is Line 1",
+                            Chords =
+                            {
+                                ["0"] = "Em",
+                                ["10"] = "Dm",
+                            }
+                        }
+                    ]
+                }
+            ]
         };
 
         // Act
-        var result = await _sut.ExecuteAsync(request);
+        var response = await _sut.ExecuteAsync(request);
 
         // Assert
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().NotBeNull();
-        result.Value.Title.Should().Be(request.Title);
-        result.Value.Artist.Should().Be(request.Artist);
-        result.Value.Lyrics.Should().NotBeNull();
-        result.Value.Lyrics.Content.Should().Be(request.Lyrics.Content);
-        result.Value.Lyrics.Chords.Should().HaveCount(2);
-        result.Value.Lyrics.Chords[0].Should().HaveCount(1);
-        result.Value.Lyrics.Chords[0][0].Signature.Should().Be("C");
-        result.Value.Lyrics.Chords[0][0].Notes.Should().HaveCount(3);
-        result.Value.Lyrics.Chords[5].Should().HaveCount(1);
-        result.Value.Lyrics.Chords[5][0].Signature.Should().Be("G");
-        result.Value.Lyrics.Chords[5][0].Notes.Should().HaveCount(3);
-        result.Value.Lyrics.Language.Should().Be("en");
+        response.IsSuccess.Should().BeTrue();
+        var result = response.Value;
+        result.Should().NotBeNull();
+        result.TrackId.Should().Be("track001");
+        result.ContributorId.Should().Be("user001");
+        result.ContributorName.Should().Be("User 1");
+        result.ContributorEmail.Should().Be("user@test.com");
+        result.Content.Should().NotBeNullOrEmpty();
+        result.Content[0].Type.Should().Be("Verse 1");
+        result.Content[0].Lines.Should().NotBeNullOrEmpty();
+        result.Content[0].Lines[0].Lyrics.Should().Be("This is Line 1");
+        result.Content[0].Lines[0].Chords.Should().NotBeNullOrEmpty();
+        result.Content[0].Lines[0].Chords["0"].Should().Be("Em");
+        result.Content[0].Lines[0].Chords["10"].Should().Be("Dm");
+    }
+
+    [Theory]
+    [InlineData("track001", "user001", null, null, false)]
+    [InlineData("track001", "user001", "user@test.com", null, true)]
+    public async Task ExecuteAsync_InvalidRequest_ShouldReturnBadRequest(string trackId, string contributorId, 
+        string? contributorName, string? contributorEmail, bool isContentEmpty)
+    {
+        // Arrange
+        var request = new SubmitChordsRequest
+        {
+            TrackId = trackId,
+            ContributorId = contributorId,
+            ContributorName = contributorName,
+            ContributorEmail = contributorEmail,
+            Content = isContentEmpty ? [] : [ new Section {} ],
+        };
+
+        // Act
+        var response = await _sut.ExecuteAsync(request);
+
+        // Assert
+        response.IsSuccess.Should().BeFalse();
+        response.Error!.Code.Should().Be(Domain.Errors.ErrorCode.InvalidRequest);
     }
 }

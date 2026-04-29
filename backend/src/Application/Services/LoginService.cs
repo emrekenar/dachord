@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 namespace Application.Services;
 
 using Microsoft.IdentityModel.Tokens;
@@ -13,15 +14,22 @@ using Application.Requests;
 using Application.Responses;
 using Application.Configuration;
 
-public class LoginService(IOptions<JwtOptions> jwtOptions, IUserRepository userRepository) : ILoginService
+public class LoginService(IOptions<JwtOptions> jwtOptions, IUserRepository userRepository, ILogger<LoginService> logger) : ILoginService
 {
     private readonly JwtOptions _jwtOptions = jwtOptions.Value;
 
     public async Task<Result<LoginResponse>> ExecuteAsync(LoginRequest request)
     {
+        logger.LogInformation("LoginService.ExecuteAsync called for email: {Email}", request.Email);
         var user = await userRepository.GetByEmailAsync(request.Email);
-        if (user is null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+        if (user is null)
         {
+            logger.LogWarning("User not found for email: {Email}", request.Email);
+            return Result<LoginResponse>.Failure(new Error(ErrorCode.InvalidCredentials, "Invalid email or password."));
+        }
+        if (!SecurityService.Verify(request.Password, user.PasswordHash))
+        {
+            logger.LogWarning("Invalid password for email: {Email}", request.Email);
             return Result<LoginResponse>.Failure(new Error(ErrorCode.InvalidCredentials, "Invalid email or password."));
         }
 
@@ -43,6 +51,7 @@ public class LoginService(IOptions<JwtOptions> jwtOptions, IUserRepository userR
         var token = tokenHandler.CreateToken(tokenDescriptor);
         var tokenString = tokenHandler.WriteToken(token);
 
+        logger.LogInformation("Token generated for user: {Email}", user.Email);
         var responseValue = new LoginResponse { Token = tokenString };
         return Result<LoginResponse>.Success(responseValue);
     }

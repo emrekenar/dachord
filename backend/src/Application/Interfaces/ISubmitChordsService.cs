@@ -6,5 +6,5 @@ using Application.Responses;
 
 public interface ISubmitChordsService
 {
-    Task<Result<TrackResponse>> ExecuteAsync(SubmitChordsRequest request);
+    Task<Result<TrackVersionResponse>> ExecuteAsync(SubmitChordsRequest request);
 }

@@ -20,6 +20,8 @@ public static class ServiceConfiguration
         builder.Services.Configure<MusicTheoryOptions>(builder.Configuration.GetSection(MusicTheoryOptions.SectionName));
         builder.Services.AddMemoryCache();
 
+        builder.Services.AddScoped<IChordService, ChordService>();
+        builder.Services.AddScoped<ISearchChordsService, SearchChordsService>();
         builder.Services.AddScoped<IRegisterService, RegisterService>();
         builder.Services.AddScoped<ILoginService, LoginService>();
         builder.Services.AddScoped<ISubmitChordsService, SubmitChordsService>();

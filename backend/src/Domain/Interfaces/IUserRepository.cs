@@ -1,6 +1,6 @@
-using Domain.Models;
-
 namespace Domain.Interfaces;
+
+using Domain.Models.User;
 
 public interface IUserRepository
 {

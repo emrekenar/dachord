@@ -1,9 +1,10 @@
 namespace Application.Services;
 
 using Application.Configuration;
+using Application.Interfaces;
 using Microsoft.Extensions.Options;
 
-public class ChordService
+public class ChordService : IChordService
 {
     private readonly MusicTheoryOptions _options;
 
@@ -12,7 +13,7 @@ public class ChordService
         _options = options.Value;
     }
 
-    public List<string> GetAvailableChords()
+    public Task<List<string>> GetAvailableChords()
     {
         var allChords = new List<string>();
         
@@ -25,6 +26,6 @@ public class ChordService
                 allChords.Add($"{note}{quality.Id}");
             }
         }
-        return allChords;
+        return Task.FromResult(allChords);
     }
 }

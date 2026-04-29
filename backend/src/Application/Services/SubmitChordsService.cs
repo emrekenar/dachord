@@ -1,31 +1,52 @@
 namespace Application.Services;
 
 using Domain.Interfaces;
-using Domain.Models;
 using Domain.Wrappers;
 using Application.Interfaces;
 using Application.Requests;
 using Application.Responses;
+using Microsoft.Extensions.Logging;
+using Domain.Errors;
+using Application.Mappers;
 
-public class SubmitChordsService(ITrackRepository trackRepository) : ISubmitChordsService
+public class SubmitChordsService(
+    ITrackRepository trackRepository,
+    ISearchTracksService searchTracksService,
+    ILogger<SubmitChordsService> logger) : ISubmitChordsService
 {
-    public async Task<Result<TrackResponse>> ExecuteAsync(SubmitChordsRequest request)
+    public async Task<Result<TrackVersionResponse>> ExecuteAsync(SubmitChordsRequest request)
     {
-        var trackModel = new Track
+        var existingTrack = await trackRepository.GetTrackAsync(request.TrackId);
+        if (existingTrack == null)
         {
-            Title = request.Title,
-            Artist = request.Artist,
-            Lyrics = request.Lyrics
-        };
-        await trackRepository.SaveAsync(trackModel);
+            var spotifyTrack = await searchTracksService.GetTrackAsync(request.TrackId);
+            if (spotifyTrack == null)
+            {
+                logger.LogWarning("Track not found: {TrackId}", request.TrackId);
+                return Result<TrackVersionResponse>.Failure(new Error(ErrorCode.TrackNotFound, "Track not found."));
+            }
+        }
 
-        var trackResponse = new TrackResponse
+        if (!ValidateRequest(request))
         {
-            Id = trackModel.Id,
-            Title = trackModel.Title,
-            Artist = trackModel.Artist,
-            Lyrics = trackModel.Lyrics
-        };
-        return Result<TrackResponse>.Success(trackResponse);
+            logger.LogWarning("Chord submission request invalid: {Request}", request);
+            return Result<TrackVersionResponse>.Failure(new Error(ErrorCode.InvalidRequest, "Invalid request."));
+        }
+
+        var trackVersion = TrackVersionDtoMapper.MapFromRequest(request);
+        await trackRepository.SaveTrackVersionAsync(trackVersion);
+
+        var response = TrackVersionDtoMapper.MapToResponse(trackVersion);
+        return Result<TrackVersionResponse>.Success(response);
+    }
+
+    private static bool ValidateRequest(SubmitChordsRequest request)
+    {
+        if (request.ContributorEmail == null && request.ContributorName == null
+            || request.Content.Count == 0)
+        {
+            return false;
+        }
+        return true;
     }
 }
