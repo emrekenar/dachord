@@ -2,10 +2,10 @@ namespace Infrastructure.Entities;
 
 using Amazon.DynamoDBv2.DataModel;
 
-[DynamoDBTable("Users")]
+[DynamoDBTable("users")]
 public class UserItem
 {
-    [DynamoDBHashKey]
+    [DynamoDBHashKey("pk")]
     public required string Id { get; set; }
  
     [DynamoDBProperty]

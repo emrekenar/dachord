@@ -2,9 +2,13 @@
 
   <PropertyGroup>
     <UserSecretsId>b96c8936-a13d-432e-b1ed-e8cde5429ce9</UserSecretsId>
+    <AssemblyName>WebApi</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Amazon.CloudWatch.EMF" Version="2.2.0" />
+    <PackageReference Include="Amazon.Extensions.Configuration.SystemsManager" Version="7.1.0" />
+    <PackageReference Include="Amazon.Lambda.AspNetCoreServer.Hosting" Version="1.10.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.4" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.16.0" />
   </ItemGroup>

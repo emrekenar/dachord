@@ -1,0 +1,22 @@
+version = 0.1
+
+[dev.deploy.parameters]
+stack_name = "dachord-dev"
+region = "eu-central-1"
+capabilities = "CAPABILITY_IAM"
+resolve_s3 = true
+parameter_overrides = "Environment=\"dev\" Region=\"eu-central-1\" TableNamePrefix=\"dachord-dev-\" SsmParameterPath=\"/dachord/dev/\" DomainName=\"\" AcmCertificateArn=\"\" FrontendOrigin=\"*\""
+s3_prefix = "dachord-dev"
+confirm_changeset = true
+disable_rollback = true
+image_repositories = []
+
+
+[dev.global.parameters]
+region = "eu-central-1"
+[prod.deploy.parameters]
+stack_name = "dachord-prod"
+region = "eu-central-1"
+capabilities = "CAPABILITY_IAM"
+resolve_s3 = true
+parameter_overrides = "Environment=prod Region=eu-central-1 TableNamePrefix=dachord-prod- SsmParameterPath=/dachord/prod/ DomainName=api.dachord.com AcmCertificateArn=arn:aws:acm:eu-central-1:448161422995:certificate/REPLACE_ME FrontendOrigin=https://dachord.com"

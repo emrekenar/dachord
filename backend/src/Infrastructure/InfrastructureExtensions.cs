@@ -21,17 +21,34 @@ public static class InfrastructureExtensions
         var awsServiceUrl = configuration["AWS:ServiceURL"];
         var awsAccessKey = configuration["AWS:AccessKey"];
         var awsSecretKey = configuration["AWS:SecretKey"];
+        var awsRegion = configuration["AWS:Region"] ?? "eu-central-1";
 
         services.AddSingleton<IAmazonDynamoDB>(sp =>
-            new AmazonDynamoDBClient(
-                new Amazon.Runtime.BasicAWSCredentials(awsAccessKey, awsSecretKey),
-                new AmazonDynamoDBConfig { ServiceURL = awsServiceUrl }
-            )
-        );
+        {
+            // Local/test: ServiceURL is set → explicit credentials against LocalStack
+            if (!string.IsNullOrEmpty(awsServiceUrl))
+            {
+                return new AmazonDynamoDBClient(
+                    new Amazon.Runtime.BasicAWSCredentials(awsAccessKey ?? "test", awsSecretKey ?? "test"),
+                    new AmazonDynamoDBConfig { ServiceURL = awsServiceUrl }
+                );
+            }
+
+            // Real AWS: explicit ServiceURL bypasses SDK v4 endpoint resolution which can hang
+            return new AmazonDynamoDBClient(
+                new AmazonDynamoDBConfig
+                {
+                    ServiceURL = $"https://dynamodb.{awsRegion}.amazonaws.com",
+                    AuthenticationRegion = awsRegion,
+                    MaxErrorRetry = 2
+                }
+            );
+        });
 
         services.AddSingleton<IDynamoDBContext>(sp =>
             new DynamoDBContextBuilder()
                 .WithDynamoDBClient(() => sp.GetRequiredService<IAmazonDynamoDB>())
+                .ConfigureContext(cfg => cfg.TableNamePrefix = options.TableNamePrefix)
                 .Build()
         );
 

@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    services:
+      localstack:
+        image: localstack/localstack:latest
+        ports:
+          - 4566:4566
+        env:
+          SERVICES: dynamodb
+        options: >-
+          --health-cmd "curl -s http://localhost:4566/_localstack/health | grep -q '\"dynamodb\": \"available\"'"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Unit tests
+        run: dotnet test tests/UnitTests/UnitTests.csproj --no-build --configuration Release --verbosity minimal
+
+      - name: Integration tests
+        run: dotnet test tests/Integration/IntegrationTests.csproj --no-build --configuration Release --verbosity minimal
+        env:
+          AWS__ServiceURL: http://localhost:4566
+          AWS__AccessKey: test
+          AWS__SecretKey: test

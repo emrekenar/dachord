@@ -1,14 +1,20 @@
 namespace Infrastructure.Persistence;
 
+using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
+using Amazon.DynamoDBv2.Model;
+using Microsoft.Extensions.Options;
 
 using Domain.Interfaces;
 using Domain.Models.User;
+using Infrastructure.Configuration;
 using Infrastructure.Entities;
 using Infrastructure.Mappers;
 
-public class UserRepository(IDynamoDBContext dynamoDbContext) : IUserRepository
+public class UserRepository(IDynamoDBContext dynamoDbContext, IAmazonDynamoDB dynamoDbClient, IOptions<DynamoDbOptions> dynamoDbOptions) : IUserRepository
 {
+    private string UsersTable => dynamoDbOptions.Value.TableNamePrefix + "users";
+
     public async Task<User?> GetByIdAsync(string id)
     {
         var item = await dynamoDbContext.LoadAsync<UserItem>(id);
@@ -17,14 +23,21 @@ public class UserRepository(IDynamoDBContext dynamoDbContext) : IUserRepository
 
     public async Task<User?> GetByEmailAsync(string email)
     {
-        var conditions = new List<ScanCondition>
+        var response = await dynamoDbClient.QueryAsync(new QueryRequest
         {
-            new("Email", Amazon.DynamoDBv2.DocumentModel.ScanOperator.Equal, email)
-        };
-        var search = dynamoDbContext.ScanAsync<UserItem>(conditions);
-        var items = await search.GetRemainingAsync();
-        var item = items.FirstOrDefault();
-        return item is null ? null : UserMapper.MapToDomainModel(item);
+            TableName = UsersTable,
+            IndexName = "EmailIndex",
+            KeyConditionExpression = "Email = :email",
+            ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+            {
+                [":email"] = new AttributeValue { S = email }
+            },
+            Limit = 1
+        });
+        var raw = response.Items.FirstOrDefault();
+        if (raw is null) return null;
+        var item = Amazon.DynamoDBv2.DocumentModel.Document.FromAttributeMap(raw);
+        return UserMapper.MapToDomainModel(dynamoDbContext.FromDocument<UserItem>(item));
     }
 
     public async Task CreateUserAsync(User user)

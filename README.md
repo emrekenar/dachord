@@ -1,25 +1,122 @@
-# dachord Chord Application
+# dachord
 
-## Running tests
+## Local development
 
-### unit tests
-`dotnet test backend/tests/UnitTests/UnitTests.csproj`
+### Prerequisites
+- [.NET 10 SDK](https://dotnet.microsoft.com/download)
+- [Docker](https://www.docker.com/) (for LocalStack)
 
-### integration tests (ensure Docker daemon is running)
-`dotnet test backend/tests/Integration/IntegrationTests.csproj`
+### 1. Secrets
 
-## Running locally
+Copy `backend/src/WebApi/secrets.json.example` to `backend/src/WebApi/secrets.json` and fill in your values:
 
-### configuration
-`dotnet user-secrets set "Jwt:Key" "your_jwt_key"`
-`dotnet user-secrets set "Spotify:ClientId" "your_actual_client_id"`
-`dotnet user-secrets set "Spotify:ClientSecret" "your_actual_client_secret"`
+```json
+{
+  "Spotify": {
+    "ClientId": "...",
+    "ClientSecret": "..."
+  },
+  "Jwt": {
+    "Key": "any-string-at-least-32-chars-long"
+  },
+  "DevApiKey": "any-string"
+}
+```
 
-### infrastructure
-`docker compose up`
+`secrets.json` is gitignored. The `AWS` block is not needed locally — `appsettings.Development.json` already points to LocalStack.
 
-### backend
-`cd backend && dotnet run`
+### 2. Start local infrastructure
 
-### frontend
-`cd frontend && npm run dev`
+```bash
+docker compose up
+```
+
+This starts LocalStack and creates the DynamoDB tables automatically.
+
+### 3. Run the backend
+
+```bash
+cd backend && dotnet run --project src/WebApi
+```
+
+### 4. Run the frontend
+
+```bash
+cd frontend-web && npm install && npm run dev
+```
+
+---
+
+## Tests
+
+```bash
+# Unit tests
+dotnet test backend/tests/UnitTests/UnitTests.csproj
+
+# Integration tests (requires Docker)
+dotnet test backend/tests/Integration/IntegrationTests.csproj
+```
+
+---
+
+## AWS deployment
+
+### Prerequisites
+- [AWS CLI](https://aws.amazon.com/cli/) configured with your account (`aws configure`)
+- [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html)
+- Docker (SAM uses it to build the Lambda package)
+
+### 1. Spotify credentials
+
+Register an app at [developer.spotify.com](https://developer.spotify.com) to get a client ID and secret.
+
+### 2. SSM parameters
+
+Store secrets in AWS Systems Manager Parameter Store. Replace values with your own:
+
+```bash
+aws ssm put-parameter --name /dachord/dev/Jwt__Key \
+  --value "your-jwt-secret-min-32-chars" \
+  --type SecureString --region eu-central-1
+
+aws ssm put-parameter --name /dachord/dev/Spotify__ClientId \
+  --value "your-spotify-client-id" \
+  --type SecureString --region eu-central-1
+
+aws ssm put-parameter --name /dachord/dev/Spotify__ClientSecret \
+  --value "your-spotify-client-secret" \
+  --type SecureString --region eu-central-1
+
+aws ssm put-parameter --name /dachord/dev/DevApiKey \
+  --value "your-dev-api-key" \
+  --type SecureString --region eu-central-1
+```
+
+### 3. DynamoDB tables
+
+```bash
+aws dynamodb create-table \
+  --table-name dachord-dev-users \
+  --attribute-definitions AttributeName=pk,AttributeType=S AttributeName=Email,AttributeType=S \
+  --key-schema AttributeName=pk,KeyType=HASH \
+  --global-secondary-indexes '[{"IndexName":"EmailIndex","KeySchema":[{"AttributeName":"Email","KeyType":"HASH"}],"Projection":{"ProjectionType":"ALL"}}]' \
+  --billing-mode PAY_PER_REQUEST \
+  --region eu-central-1
+
+aws dynamodb create-table \
+  --table-name dachord-dev-tracks \
+  --attribute-definitions AttributeName=pk,AttributeType=S AttributeName=sk,AttributeType=S \
+  --key-schema AttributeName=pk,KeyType=HASH AttributeName=sk,KeyType=RANGE \
+  --billing-mode PAY_PER_REQUEST \
+  --region eu-central-1
+```
+
+### 4. Deploy
+
+```bash
+cd backend
+sam build --config-env dev
+sam deploy --config-env dev
+```
+
+The first deploy will prompt for confirmation. The API URL is printed in the stack outputs.

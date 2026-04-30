@@ -4,13 +4,13 @@ using Amazon.DynamoDBv2.DataModel;
 using Domain.Models.Track;
 
 
-[DynamoDBTable("Tracks")]
+[DynamoDBTable("tracks")]
 public class TrackItem
 {
-    [DynamoDBHashKey]
+    [DynamoDBHashKey("pk")]
     public required string TrackId { get; set; }
 
-    [DynamoDBRangeKey("SK")]
+    [DynamoDBRangeKey("sk")]
     public string SortKey { get; set; } = string.Empty;
 
     // Track fields

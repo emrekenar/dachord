@@ -3,6 +3,8 @@
 backend/**/bin/*
 backend/**/obj/*
 backend/**/Properties/*
+backend/**/secrets.json
+backend/.aws-sam/
 
 frontend-web/node_modules/*
 frontend-web/build/*

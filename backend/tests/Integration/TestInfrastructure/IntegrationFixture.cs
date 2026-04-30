@@ -11,17 +11,8 @@ using System.Net.Http.Json;
 using Application.Interfaces;
 using Application.Requests;
 using Application.Responses;
-using Domain.Models.Track;
 
 namespace IntegrationTests.TestInfrastructure;
-
-file class NullSearchTracksService : ISearchTracksService
-{
-    public Task<SearchTracksResponse> QueryAsync(TrackSearchRequest request) => Task.FromResult(new SearchTracksResponse([]));
-    public Task<Track?> GetTrackAsync(string id) => Task.FromResult<Track?>(null);
-    public Task<SearchTracksResponse> GetTracksInAlbum(string albumId) => Task.FromResult(new SearchTracksResponse([]));
-    public Task<SearchTracksResponse> GetTracksFromArtist(string artistId) => Task.FromResult(new SearchTracksResponse([]));
-}
 
 public class IntegrationFixture : IAsyncLifetime
 {
@@ -31,8 +22,8 @@ public class IntegrationFixture : IAsyncLifetime
     private readonly LocalStackContainer _localStack;
     private IAmazonDynamoDB? _dynamoDb;
 
-    private const string TracksTableName = "Tracks";
-    private const string UsersTableName = "Users";
+    private const string TracksTableName = "dachord-dev-tracks";
+    private const string UsersTableName = "dachord-dev-users";
 
     private const string RegisterEndpoint = "/register";
     private const string LoginEndpoint = "/login";
@@ -59,34 +50,48 @@ public class IntegrationFixture : IAsyncLifetime
         var config = new AmazonDynamoDBConfig { ServiceURL = connectionString };
         _dynamoDb = new AmazonDynamoDBClient(new BasicAWSCredentials("test", "test"), config);
 
-        // Create tracks table: TrackId (HASH) + SK (RANGE) — matches TrackItem entity
+        // Create tracks table: pk (HASH) + sk (RANGE)
         await _dynamoDb.CreateTableAsync(new CreateTableRequest
         {
             TableName = TracksTableName,
             AttributeDefinitions = new List<AttributeDefinition>
             {
-                new AttributeDefinition("TrackId", ScalarAttributeType.S),
-                new AttributeDefinition("SK", ScalarAttributeType.S)
+                new AttributeDefinition("pk", ScalarAttributeType.S),
+                new AttributeDefinition("sk", ScalarAttributeType.S)
             },
             KeySchema = new List<KeySchemaElement>
             {
-                new KeySchemaElement("TrackId", KeyType.HASH),
-                new KeySchemaElement("SK", KeyType.RANGE)
+                new KeySchemaElement("pk", KeyType.HASH),
+                new KeySchemaElement("sk", KeyType.RANGE)
             },
             ProvisionedThroughput = new ProvisionedThroughput(5, 5)
         });
 
-        // Create users table: Id (HASH) only — matches UserItem entity (no sort key)
+        // Create users table: pk (HASH) + EmailIndex GSI for efficient GetByEmail queries
         await _dynamoDb.CreateTableAsync(new CreateTableRequest
         {
             TableName = UsersTableName,
             AttributeDefinitions = new List<AttributeDefinition>
             {
-                new AttributeDefinition("Id", ScalarAttributeType.S)
+                new AttributeDefinition("pk", ScalarAttributeType.S),
+                new AttributeDefinition("Email", ScalarAttributeType.S)
             },
             KeySchema = new List<KeySchemaElement>
             {
-                new KeySchemaElement("Id", KeyType.HASH)
+                new KeySchemaElement("pk", KeyType.HASH)
+            },
+            GlobalSecondaryIndexes = new List<GlobalSecondaryIndex>
+            {
+                new GlobalSecondaryIndex
+                {
+                    IndexName = "EmailIndex",
+                    KeySchema = new List<KeySchemaElement>
+                    {
+                        new KeySchemaElement("Email", KeyType.HASH)
+                    },
+                    Projection = new Projection { ProjectionType = ProjectionType.ALL },
+                    ProvisionedThroughput = new ProvisionedThroughput(5, 5)
+                }
             },
             ProvisionedThroughput = new ProvisionedThroughput(5, 5)
         });
@@ -97,8 +102,8 @@ public class IntegrationFixture : IAsyncLifetime
             TableName = TracksTableName,
             Item = new Dictionary<string, AttributeValue>
             {
-                { "TrackId", new AttributeValue(ExistingTrackId) },
-                { "SK", new AttributeValue("METADATA") },
+                { "pk", new AttributeValue(ExistingTrackId) },
+                { "sk", new AttributeValue("METADATA") },
                 { "Title", new AttributeValue("Test Track") },
                 { "ArtistId", new AttributeValue("artist001") },
                 { "ArtistName", new AttributeValue("Test Artist") },
