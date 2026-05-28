@@ -18,7 +18,7 @@ jobs:
     outputs:
       api_url: ${{ steps.sam-outputs.outputs.api_url }}
       frontend_bucket: ${{ steps.sam-outputs.outputs.frontend_bucket }}
-      cloudfront_id: ${{ steps.sam-outputs.outputs.cloudfront_id }}
+      cloudfront_distribution_id: ${{ steps.sam-outputs.outputs.cloudfront_distribution_id }}
 
     steps:
       - uses: actions/checkout@v4
@@ -39,10 +39,10 @@ jobs:
         run: |
           API_URL=$(aws cloudformation describe-stacks --stack-name dachord-dev --query "Stacks[0].Outputs[?OutputKey=='ApiUrl'].OutputValue" --output text)
           BUCKET=$(aws cloudformation describe-stacks --stack-name dachord-dev --query "Stacks[0].Outputs[?OutputKey=='FrontendBucketName'].OutputValue" --output text)
-          CF_ID=$(aws cloudformation describe-stacks --stack-name dachord-dev --query "Stacks[0].Outputs[?OutputKey=='FrontendUrl'].OutputValue" --output text | sed 's|https://||' | cut -d'/' -f1)
+          CF_ID=$(aws cloudformation describe-stacks --stack-name dachord-dev --query "Stacks[0].Outputs[?OutputKey=='FrontendDistributionId'].OutputValue" --output text)
           echo "api_url=$API_URL" >> $GITHUB_OUTPUT
           echo "frontend_bucket=$BUCKET" >> $GITHUB_OUTPUT
-          echo "cloudfront_id=$CF_ID" >> $GITHUB_OUTPUT
+          echo "cloudfront_distribution_id=$CF_ID" >> $GITHUB_OUTPUT
 
   deploy-frontend:
     needs: deploy-backend
@@ -71,4 +71,4 @@ jobs:
       - name: Upload to S3
         run: aws s3 sync dist/ s3://${{ needs.deploy-backend.outputs.frontend_bucket }} --delete
       - name: Invalidate CloudFront
-        run: aws cloudfront create-invalidation --distribution-id ${{ needs.deploy-backend.outputs.cloudfront_id }} --paths "/*"
+        run: aws cloudfront create-invalidation --distribution-id ${{ needs.deploy-backend.outputs.cloudfront_distribution_id }} --paths "/*"
