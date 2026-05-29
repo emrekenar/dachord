@@ -22,8 +22,8 @@ public class IntegrationFixture : IAsyncLifetime
     private readonly LocalStackContainer _localStack;
     private IAmazonDynamoDB? _dynamoDb;
 
-    private const string TracksTableName = "dachord-dev-tracks";
-    private const string UsersTableName = "dachord-dev-users";
+    private const string TracksTableName = "dachord-test-tracks";
+    private const string UsersTableName = "dachord-test-users";
 
     private const string RegisterEndpoint = "/register";
     private const string LoginEndpoint = "/login";
@@ -38,8 +38,7 @@ public class IntegrationFixture : IAsyncLifetime
 
     public IntegrationFixture()
     {
-        _localStack = new LocalStackBuilder("localstack/localstack:latest")
-            .WithPortBinding(4566)
+        _localStack = new LocalStackBuilder("localstack/localstack:3")
             .Build();
     }
 
@@ -118,6 +117,8 @@ public class IntegrationFixture : IAsyncLifetime
                 builder.UseSetting("AWS:ServiceURL", connectionString);
                 builder.UseSetting("AWS:AccessKey", "test");
                 builder.UseSetting("AWS:SecretKey", "test");
+                builder.UseSetting("Jwt:Key", "integration-test-secret-key-must-be-at-least-32-chars");
+                builder.UseSetting("DynamoDb:TableNamePrefix", "dachord-test-");
                 builder.ConfigureTestServices(services =>
                 {
                     services.AddSingleton<ISearchTracksService, NullSearchTracksService>();

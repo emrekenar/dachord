@@ -12,19 +12,6 @@ jobs:
       run:
         working-directory: backend
 
-    services:
-      localstack:
-        image: localstack/localstack-community:latest
-        ports:
-          - 4566:4566
-        env:
-          SERVICES: dynamodb
-        options: >-
-          --health-cmd "curl -s http://localhost:4566/_localstack/health | grep -q '\"dynamodb\": \"available\"'"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-
     steps:
       - uses: actions/checkout@v4
 
@@ -43,7 +30,3 @@ jobs:
 
       - name: Integration tests
         run: dotnet test tests/Integration/IntegrationTests.csproj --no-build --configuration Release --verbosity minimal
-        env:
-          AWS__ServiceURL: http://localhost:4566
-          AWS__AccessKey: test
-          AWS__SecretKey: test
