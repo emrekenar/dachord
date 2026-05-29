@@ -11,4 +11,5 @@ internal class NullSearchTracksService : ISearchTracksService
     public Task<Track?> GetTrackAsync(string id) => Task.FromResult<Track?>(null);
     public Task<SearchTracksResponse> GetTracksInAlbum(string albumId) => Task.FromResult(new SearchTracksResponse([]));
     public Task<SearchTracksResponse> GetTracksFromArtist(string artistId) => Task.FromResult(new SearchTracksResponse([]));
+    public Task<List<AlbumResponse>> GetArtistAlbumsAsync(string artistId) => Task.FromResult(new List<AlbumResponse>());
 }

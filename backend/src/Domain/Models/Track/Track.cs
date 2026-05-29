@@ -16,4 +16,7 @@ public class Track
     public required string AlbumName { get; set; }
 
     public int TrackNumber { get; set; }  // For sorting within the album
+
+    public string? ImageUrl { get; set; }
+    public string? Url { get; set; }
 }

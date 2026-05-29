@@ -1,6 +1,6 @@
-import { useState } from 'react';
-
-const API = 'https://localhost:7266';
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { apiFetch } from '../api';
 const SECTION_TYPES = ['Intro', 'Verse', 'Pre-Chorus', 'Chorus', 'Bridge', 'Outro', 'Interlude', 'Solo'];
 
 interface TrackResult {
@@ -65,6 +65,7 @@ function chordPreviewLine(lyrics: string, chords: ChordEntry[]): string {
 }
 
 export default function SubmitChord() {
+  const { trackId } = useParams<{ trackId?: string }>();
   const [query, setQuery] = useState('');
   const [trackResults, setTrackResults] = useState<TrackResult[]>([]);
   const [searching, setSearching] = useState(false);
@@ -73,11 +74,20 @@ export default function SubmitChord() {
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  useEffect(() => {
+    if (!trackId) return;
+    apiFetch(`/track/${trackId}`)
+      .then(res => (res.ok ? res.json() : null))
+      .then(data => {
+        if (data) selectTrack({ trackId: data.id, title: data.title, artistName: data.artistName, albumName: data.albumName });
+      });
+  }, [trackId]);
+
   async function searchTracks(e: { preventDefault(): void }) {
     e.preventDefault();
     setSearching(true);
     try {
-      const res = await fetch(`${API}/searchTracks`, {
+      const res = await apiFetch('/searchTracks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ Query: query }),
@@ -160,7 +170,7 @@ export default function SubmitChord() {
     setSubmitting(true);
     setMessage('');
     try {
-      const res = await fetch(`${API}/chords`, {
+      const res = await apiFetch('/chords', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

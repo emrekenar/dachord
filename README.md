@@ -4,9 +4,10 @@
 
 ### Prerequisites
 - [.NET 10 SDK](https://dotnet.microsoft.com/download)
+- [Node.js 20+](https://nodejs.org/)
 - [Docker](https://www.docker.com/) (for LocalStack)
 
-### 1. Secrets
+### 1. Backend secrets
 
 Copy `backend/src/WebApi/secrets.json.example` to `backend/src/WebApi/secrets.json` and fill in your values:
 
@@ -23,23 +24,34 @@ Copy `backend/src/WebApi/secrets.json.example` to `backend/src/WebApi/secrets.js
 }
 ```
 
-`secrets.json` is gitignored. The `AWS` block is not needed locally — `appsettings.Development.json` already points to LocalStack.
+`secrets.json` is gitignored. The `AWS` block is not needed locally — `appsettings.Development.json` already points to LocalStack at `http://localhost:4566` and uses table prefix `dachord-local-`.
 
-### 2. Start local infrastructure
+### 2. Frontend env
+
+Create `frontend-web/.env.local`:
+
+```
+VITE_API_BASE=https://localhost:7266
+VITE_DEV_KEY=<same value as DevApiKey in secrets.json>
+```
+
+`.env.local` is gitignored by Vite.
+
+### 3. Start local infrastructure
 
 ```bash
 docker compose up
 ```
 
-This starts LocalStack and creates the DynamoDB tables automatically.
+This starts LocalStack and creates the `dachord-local-tracks` and `dachord-local-users` DynamoDB tables automatically.
 
-### 3. Run the backend
+### 4. Run the backend
 
 ```bash
-cd backend && dotnet run --project src/WebApi
+cd backend/src/WebApi && dotnet run
 ```
 
-### 4. Run the frontend
+### 5. Run the frontend
 
 ```bash
 cd frontend-web && npm install && npm run dev
@@ -93,6 +105,8 @@ aws ssm put-parameter --name /dachord/dev/DevApiKey \
 ```
 
 ### 3. DynamoDB tables
+
+Table prefix is `dachord-dev-` for the deployed dev environment (`dachord-local-` is only used by LocalStack).
 
 ```bash
 aws dynamodb create-table \

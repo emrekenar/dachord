@@ -36,8 +36,8 @@ if (app.Environment.IsDevelopment())
     app.UseDeveloperExceptionPage();
 
 app.UseMiddleware<LambdaMethodFixMiddleware>();
-app.UseMiddleware<DevApiKeyMiddleware>();
 app.UseCors();
+app.UseMiddleware<DevApiKeyMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 

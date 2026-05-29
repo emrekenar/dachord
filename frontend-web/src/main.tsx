@@ -17,9 +17,10 @@ createRoot(document.getElementById('root')!).render(
       <Routes>
         <Route path="/" element={<App />}>
           <Route index element={<Search />} />
+          <Route path="search" element={<Search />} />
+          <Route path="submit/:trackId" element={<SubmitChord />} />
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
-          <Route path="submit" element={<SubmitChord />} />
           <Route path="chords/:id" element={<ChordView />} />
           <Route path="track/:id" element={<TrackDetail />} />
         </Route>

@@ -119,6 +119,13 @@ public class IntegrationFixture : IAsyncLifetime
                 builder.UseSetting("AWS:SecretKey", "test");
                 builder.UseSetting("Jwt:Key", "integration-test-secret-key-must-be-at-least-32-chars");
                 builder.UseSetting("DynamoDb:TableNamePrefix", "dachord-test-");
+                builder.ConfigureAppConfiguration((_, config) =>
+                {
+                    config.AddInMemoryCollection(new Dictionary<string, string?>
+                    {
+                        ["DevApiKey"] = "",
+                    });
+                });
                 builder.ConfigureTestServices(services =>
                 {
                     services.AddSingleton<ISearchTracksService, NullSearchTracksService>();
