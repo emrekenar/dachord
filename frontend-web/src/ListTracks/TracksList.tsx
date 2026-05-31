@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
+import { apiFetch } from '../api';
 
 export default function TracksList() {
   const [tracks, setTracks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('https://localhost:7266/tracks')
+    apiFetch('/tracks')
       .then(res => res.json())
       .then(data => {
         setTracks(data);

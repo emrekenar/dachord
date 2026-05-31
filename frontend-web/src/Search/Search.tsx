@@ -1,104 +1,73 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-
-interface TrackResponse {
-  trackId: string;
-  title: string;
-  artistName: string;
-  albumName: string;
-  url?: string;
-}
-
-interface VersionSummary {
-  contributorName?: string;
-  likeCount: number;
-  isApproved: boolean;
-}
-
-interface TrackVersionsPair {
-  track: TrackResponse;
-  versions: VersionSummary[];
-}
+import { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import SearchBar from './SearchBar';
+import SearchResults, { type TrackVersionsPair } from './SearchResults';
+import ArtistView from './ArtistView';
+import { apiFetch } from '../api';
 
 export default function Search() {
-  const [query, setQuery] = useState('');
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [results, setResults] = useState<TrackVersionsPair[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
 
-  async function handleSearch(e: { preventDefault(): void }) {
-    e.preventDefault();
-    if (query.length <= 2) return;
+  const q = searchParams.get('q') ?? '';
+  const artistId = searchParams.get('artistId') ?? '';
+  const artistName = searchParams.get('artistName') ?? '';
+  const albumId = searchParams.get('albumId') ?? '';
+  const albumName = searchParams.get('albumName') ?? '';
+
+  useEffect(() => {
+    if (artistId) return;
+
+    const body: Record<string, string> = {};
+    if (albumId) body.AlbumId = albumId;
+    else if (q) body.Query = q;
+    else return;
+
+    const controller = new AbortController();
     setLoading(true);
-    try {
-      const res = await fetch('https://localhost:7266/search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ Query: query }),
-      });
-      setSearched(true);
-      if (res.ok) {
-        const data = await res.json();
-        setResults(data.results ?? []);
-      } else {
-        setResults([]);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }
+    setSearched(false);
+
+    apiFetch('/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    })
+      .then(res => {
+        setSearched(true);
+        return res.ok ? res.json() : null;
+      })
+      .then(data => setResults(data?.results ?? []))
+      .catch(e => { if ((e as Error).name !== 'AbortError') setResults([]); })
+      .finally(() => setLoading(false));
+
+    return () => controller.abort();
+  }, [q, albumId, artistId]);
 
   return (
     <div className="search-page">
       <h2>Search Chord Sheets</h2>
-      <form className="search-form" onSubmit={handleSearch}>
-        <input
-          type="text"
-          placeholder="Search by song or artist..."
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-        />
-        <button type="submit" disabled={loading || query.length <= 2}>
-          {loading ? 'Searching…' : 'Search'}
-        </button>
-      </form>
+      <SearchBar key={searchParams.toString()} initialValue={q} onNavigate={navigate} />
 
-      {searched && !loading && results.length === 0 && (
-        <p className="empty-state">
-          No chord sheets found.{' '}
-          <Link to="/submit">Be the first to add one!</Link>
-        </p>
+      {artistId ? (
+        <>
+          <h3 className="search-heading">Albums by {artistName}</h3>
+          <ArtistView artistId={artistId} />
+        </>
+      ) : (
+        <>
+          {albumId && <h3 className="search-heading">Tracks from {albumName}</h3>}
+          {q && <h3 className="search-heading">Results for "{q}"</h3>}
+          {loading && <p className="loading-state">Searching…</p>}
+          {searched && !loading && results.length === 0 && (
+            <p className="empty-state">No results found.</p>
+          )}
+          <SearchResults results={results} />
+        </>
       )}
-
-      <div className="search-results">
-        {results.map(({ track, versions }) => (
-          <div key={track.trackId} className="search-result-card">
-            <div className="track-info">
-              <strong>{track.title}</strong>
-              <span className="artist-name">{track.artistName}</span>
-              <span className="album-name">{track.albumName}</span>
-            </div>
-            {versions.length === 0 ? (
-              <div className="no-versions">
-                No chord sheets yet —{' '}
-                <Link to="/submit">add one?</Link>
-              </div>
-            ) : (
-              <ul className="versions-list">
-                {versions.map((v, i) => (
-                  <li key={i} className="version-item">
-                    <Link to={`/chords/${track.trackId}`}>
-                      {v.contributorName ? `by ${v.contributorName}` : 'View chords'}
-                    </Link>
-                    <span className="like-count">♥ {v.likeCount}</span>
-                    {v.isApproved && <span className="approved-badge">✓ approved</span>}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        ))}
-      </div>
     </div>
   );
 }

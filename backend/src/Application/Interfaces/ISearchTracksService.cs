@@ -14,4 +14,5 @@ public interface ISearchTracksService
     Task<Track?> GetTrackAsync(string id);
     Task<SearchTracksResponse> GetTracksInAlbum(string albumId);
     Task<SearchTracksResponse> GetTracksFromArtist(string artistId);
+    Task<List<AlbumResponse>> GetArtistAlbumsAsync(string artistId);
 }

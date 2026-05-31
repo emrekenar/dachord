@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { apiFetch } from '../api';
 
 interface Line {
   lyrics: string;
@@ -45,7 +46,7 @@ export default function ChordView() {
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    fetch(`https://localhost:7266/chords/${id}`)
+    apiFetch(`/chords/${id}`)
       .then(res => {
         if (!res.ok) { setNotFound(true); setLoading(false); return null; }
         return res.json();

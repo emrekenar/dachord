@@ -8,28 +8,57 @@
 .app-header {
   background: #232946;
   color: #fff;
-  padding: 1.5rem 0 1rem 0;
+  padding: 1rem 1.5rem;
   margin-bottom: 2rem;
   border-radius: 10px;
 }
-.app-header h1 {
-  margin: 0 0 0.5rem 0;
-  font-size: 2.5rem;
-  letter-spacing: 2px;
+.app-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
+.app-logo {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #fff;
+  text-decoration: none;
+}
+.app-logo:hover { color: #eebbc3; }
 .app-header nav {
-  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 .app-header nav a {
   color: #eebbc3;
   text-decoration: none;
-  margin: 0 1rem;
   font-weight: 500;
-  font-size: 1.1rem;
+  font-size: 1rem;
   transition: color 0.2s;
 }
-.app-header nav a:hover {
-  color: #ffd803;
+.app-header nav a:hover { color: #ffd803; }
+.nav-sep { color: #555; }
+.nav-logout-btn {
+  background: none;
+  border: 1px solid #eebbc3;
+  color: #eebbc3;
+  padding: 0.35rem 0.9rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.nav-logout-btn:hover { background: #eebbc3; color: #232946; }
+.header-searchbar {
+  margin-top: 0.75rem;
+}
+.header-searchbar .search-bar-wrapper {
+  margin-bottom: 0;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .tracks-list, .track-detail, .submit-chord-page, .login-page, .register-page {
@@ -56,6 +85,12 @@
 .tracks-list a:hover {
   color: #eebbc3;
 }
+.track-detail-header { display: flex; gap: 1.2rem; align-items: flex-start; margin-bottom: 1rem; }
+.track-album-art { width: 120px; height: 120px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
+.track-detail-meta { display: flex; flex-direction: column; gap: 0.25rem; text-align: left; }
+.track-detail-meta h2 { margin: 0; font-size: 1.3rem; }
+.spotify-link { color: #1db954; font-size: 0.85rem; font-weight: 600; text-decoration: none; margin-top: 0.3rem; }
+.spotify-link:hover { text-decoration: underline; }
 .track-detail pre {
   background: #232946;
   color: #ee5d5d;
@@ -125,6 +160,63 @@
 .search-form button:hover:not(:disabled) { background: #ffd803; }
 .search-form button:disabled { opacity: 0.5; cursor: default; }
 
+/* ── Search bar with dropdown ────────────────────────────────── */
+.search-bar-wrapper {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+.search-bar-wrapper .search-form {
+  margin-bottom: 0;
+}
+.search-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #b8c1ec;
+  border-radius: 0 0 8px 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  z-index: 100;
+  text-align: left;
+}
+.search-dropdown-item {
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid #f0f2fa;
+}
+.search-dropdown-item:last-child { border-bottom: none; }
+.suggestion-title {
+  display: block;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  color: #232946;
+  font-size: 0.98rem;
+  padding: 0;
+  text-align: left;
+  width: 100%;
+}
+.suggestion-title:hover { color: #eebbc3; }
+.suggestion-meta { display: flex; gap: 0.4rem; align-items: center; margin-top: 0.15rem; }
+.suggestion-artist, .suggestion-album {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.82rem;
+  padding: 0;
+}
+.suggestion-artist { color: #555; }
+.suggestion-artist:hover { color: #232946; text-decoration: underline; }
+.suggestion-album { color: #888; font-style: italic; }
+.suggestion-album:hover { color: #555; text-decoration: underline; }
+.suggestion-sep { color: #ccc; font-size: 0.8rem; }
+.search-heading { margin: 0 0 1rem; font-size: 1.1rem; color: #555; font-weight: 500; }
+.loading-state { color: #888; margin: 0.5rem 0; }
+
 /* ── Search page ─────────────────────────────────────────────── */
 .search-page {
   background: #f4f6fb;
@@ -135,26 +227,60 @@
   box-shadow: 0 2px 8px rgba(0,0,0,0.07);
   color: #232946;
 }
-.search-results { display: flex; flex-direction: column; gap: 1rem; }
+.search-results { display: flex; flex-direction: column; gap: 0.6rem; }
 .search-result-card {
   background: #fff;
   border: 1px solid #b8c1ec;
   border-radius: 8px;
-  padding: 1rem 1.2rem;
+  padding: 0.8rem 1.2rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
 }
-.track-info { display: flex; flex-direction: column; gap: 0.15rem; margin-bottom: 0.6rem; }
-.track-info strong { font-size: 1.05rem; }
-.artist-name { color: #555; font-size: 0.9rem; }
-.album-name { color: #888; font-size: 0.82rem; font-style: italic; }
-.versions-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.35rem; }
-.version-item { display: flex; align-items: center; gap: 0.6rem; font-size: 0.92rem; }
+.no-versions-card { opacity: 0.7; }
+.track-info { display: flex; flex-direction: column; gap: 0.1rem; flex: 1; }
+.track-info strong { font-size: 1rem; }
+.artist-name { color: #555; font-size: 0.88rem; }
+.album-name { color: #888; font-size: 0.8rem; font-style: italic; }
+.track-versions-summary { display: flex; flex-direction: column; align-items: flex-end; gap: 0.3rem; min-width: 110px; }
+.versions-badge { border-radius: 4px; padding: 0.15rem 0.5rem; font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
+.versions-badge.has-versions { background: #d4edda; color: #155724; }
+.versions-badge.zero { background: #f0f0f0; color: #999; }
+.versions-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.25rem; }
+.version-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.88rem; }
 .version-item a { color: #232946; font-weight: 500; text-decoration: underline; }
 .version-item a:hover { color: #eebbc3; }
-.like-count { color: #ee5d5d; font-size: 0.85rem; }
-.approved-badge { background: #d4edda; color: #155724; border-radius: 4px; padding: 0.1rem 0.4rem; font-size: 0.78rem; }
-.no-versions { color: #888; font-size: 0.9rem; }
-.no-versions a, .empty-state a { color: #232946; font-weight: 600; }
+.like-count { color: #ee5d5d; font-size: 0.82rem; }
+.approved-badge { background: #d4edda; color: #155724; border-radius: 4px; padding: 0.1rem 0.35rem; font-size: 0.75rem; }
+.no-versions { font-size: 0.85rem; }
+.no-versions a { color: #232946; font-weight: 600; text-decoration: underline; }
+.no-versions a:hover { color: #eebbc3; }
 .empty-state { color: #555; margin-top: 1rem; }
+.empty-state a { color: #232946; font-weight: 600; }
+
+/* ── Artist discography tree ─────────────────────────────────── */
+.artist-discography { display: flex; flex-direction: column; gap: 0.5rem; }
+.album-row { border: 1px solid #b8c1ec; border-radius: 8px; overflow: hidden; background: #fff; }
+.album-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+.album-header:hover { background: #f4f6fb; }
+.album-thumb { width: 48px; height: 48px; border-radius: 4px; object-fit: cover; flex-shrink: 0; }
+.album-header-info { display: flex; flex-direction: column; gap: 0.1rem; flex: 1; }
+.album-title { font-weight: 600; color: #232946; font-size: 0.95rem; }
+.album-year { color: #888; font-size: 0.8rem; }
+.album-chevron { color: #888; font-size: 0.9rem; margin-left: auto; }
+.album-tracks { padding: 0 0.75rem 0.75rem; border-top: 1px solid #f0f2fa; }
 
 /* ── Chord view page ─────────────────────────────────────────── */
 .chord-view-page {

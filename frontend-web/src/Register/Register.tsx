@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { apiFetch } from '../api';
 
 export default function Register() {
   const [email, setEmail] = useState('');
@@ -11,7 +12,7 @@ export default function Register() {
         Email: email,
         Password: password
     };
-    fetch('https://localhost:7266/register', {
+    apiFetch('/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)

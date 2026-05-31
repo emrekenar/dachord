@@ -36,6 +36,18 @@ public static class EndpointMapper
             return result is not null && result.Results.Count > 0 ? Results.Ok(result) : Results.NotFound();
         });
 
+        app.MapGet("/track/{id}", async (string id, ISearchTracksService searchTracksService) =>
+        {
+            var track = await searchTracksService.GetTrackAsync(id);
+            return track is not null ? Results.Ok(track) : Results.NotFound();
+        });
+
+        app.MapGet("/artist/{artistId}/albums", async (string artistId, ISearchTracksService searchTracksService) =>
+        {
+            var albums = await searchTracksService.GetArtistAlbumsAsync(artistId);
+            return albums.Count > 0 ? Results.Ok(albums) : Results.NotFound();
+        });
+
         app.MapGet("/chords/{id}", async (string id, ITrackRepository trackRepository) =>
         {
             var trackVersion = await trackRepository.GetTrackVersionAsync(id);
@@ -48,6 +60,14 @@ public static class EndpointMapper
             return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
         })
         .RequireAuthorization();
+
+        app.MapPost("/searchTracks", async (TrackSearchRequest request, ISearchTracksService searchTracksService) =>
+        {
+            var result = await searchTracksService.QueryAsync(request);
+            return result.Results is null ? Results.BadRequest()
+                : result.Results.Count == 0 ? Results.NotFound()
+                : Results.Ok(result);
+        });
     }
 
     private static void MapTestEndpoints(WebApplication app)
@@ -56,14 +76,6 @@ public static class EndpointMapper
         {
             var track = await trackRepository.GetTrackAsync(id);
             return track is not null ? Results.Ok(track) : Results.NotFound();
-        });
-
-        app.MapPost("/searchTracks", async (TrackSearchRequest request, ISearchTracksService searchTracksService) =>
-        {
-            var result = await searchTracksService.QueryAsync(request);
-            return result.Results is null ? Results.BadRequest()
-                : result.Results.Count == 0 ? Results.NotFound()
-                : Results.Ok(result);
         });
     }
 }
