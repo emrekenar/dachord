@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { apiFetch } from '../api';
+import ChordLine, { type LineData } from './ChordLine';
+
 const SECTION_TYPES = ['Intro', 'Verse', 'Pre-Chorus', 'Chorus', 'Bridge', 'Outro', 'Interlude', 'Solo'];
 
 interface TrackResult {
@@ -10,24 +12,21 @@ interface TrackResult {
   albumName: string;
 }
 
-interface ChordEntry {
-  position: number;
-  chord: string;
-}
-
-interface LineState {
-  id: string;
-  lyrics: string;
-  chords: ChordEntry[];
-}
-
 interface SectionState {
   id: string;
-  type: string;
-  lines: LineState[];
+  type: string | null; // null = unlabeled visual break
+  lines: LineData[];
 }
 
-function newLine(): LineState {
+// API response shape from GET /tracks/{id}/lyrics
+interface ApiSection {
+  type: string;
+  lines: { lyrics: string; chords: Record<string, string> }[];
+}
+
+type LyricsStatus = 'idle' | 'loading' | 'done' | 'not_found' | 'error';
+
+function newLine(): LineData {
   return { id: crypto.randomUUID(), lyrics: '', chords: [] };
 }
 
@@ -48,22 +47,6 @@ function getContributorFromToken(): { id: string; email: string } | null {
   }
 }
 
-function chordPreviewLine(lyrics: string, chords: ChordEntry[]): string {
-  const sorted = [...chords].sort((a, b) => a.position - b.position);
-  if (sorted.length === 0) return '';
-  const maxLen = Math.max(
-    lyrics.length,
-    ...sorted.map(c => c.position + c.chord.length)
-  ) + 1;
-  const chars = Array<string>(maxLen).fill(' ');
-  for (const { position, chord } of sorted) {
-    for (let i = 0; i < chord.length && position + i < chars.length; i++) {
-      chars[position + i] = chord[i];
-    }
-  }
-  return chars.join('').trimEnd();
-}
-
 export default function SubmitChord() {
   const { trackId } = useParams<{ trackId?: string }>();
   const [query, setQuery] = useState('');
@@ -73,13 +56,15 @@ export default function SubmitChord() {
   const [sections, setSections] = useState<SectionState[]>([]);
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [lyricsStatus, setLyricsStatus] = useState<LyricsStatus>('idle');
 
   useEffect(() => {
     if (!trackId) return;
     apiFetch(`/track/${trackId}`)
       .then(res => (res.ok ? res.json() : null))
       .then(data => {
-        if (data) selectTrack({ trackId: data.id, title: data.title, artistName: data.artistName, albumName: data.albumName });
+        if (data)
+          selectTrack({ trackId: data.id, title: data.title, artistName: data.artistName, albumName: data.albumName });
       });
   }, [trackId]);
 
@@ -104,14 +89,46 @@ export default function SubmitChord() {
   function selectTrack(track: TrackResult) {
     setSelectedTrack(track);
     setTrackResults([]);
-    setSections([{ id: crypto.randomUUID(), type: 'Verse', lines: [newLine()] }]);
+    setSections([{ id: crypto.randomUUID(), type: null, lines: [newLine()] }]);
+    setLyricsStatus('idle');
+    setMessage('');
+  }
+
+  async function importLyrics() {
+    if (!selectedTrack) return;
+    const token = localStorage.getItem('token');
+    if (!token) { setMessage('Please log in to import lyrics.'); return; }
+
+    setLyricsStatus('loading');
+    setMessage('');
+    try {
+      const res = await apiFetch(`/tracks/${selectedTrack.trackId}/lyrics`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const imported: SectionState[] = (data.sections as ApiSection[]).map(s => ({
+          id: crypto.randomUUID(),
+          type: s.type || null,
+          lines: s.lines.map(l => ({ id: crypto.randomUUID(), lyrics: l.lyrics, chords: [] })),
+        }));
+        setSections(imported.length > 0 ? imported : [{ id: crypto.randomUUID(), type: null, lines: [newLine()] }]);
+        setLyricsStatus('done');
+      } else if (res.status === 404) {
+        setLyricsStatus('not_found');
+      } else {
+        setLyricsStatus('error');
+      }
+    } catch {
+      setLyricsStatus('error');
+    }
   }
 
   function addSection() {
-    setSections(prev => [...prev, { id: crypto.randomUUID(), type: 'Verse', lines: [newLine()] }]);
+    setSections(prev => [...prev, { id: crypto.randomUUID(), type: null, lines: [newLine()] }]);
   }
 
-  function updateSectionType(sIdx: number, type: string) {
+  function updateSectionType(sIdx: number, type: string | null) {
     setSections(prev => prev.map((s, i) => i === sIdx ? { ...s, type } : s));
   }
 
@@ -120,45 +137,23 @@ export default function SubmitChord() {
   }
 
   function addLine(sIdx: number) {
-    setSections(prev => prev.map((s, i) => i === sIdx
-      ? { ...s, lines: [...s.lines, newLine()] }
-      : s));
+    setSections(prev => prev.map((s, i) =>
+      i === sIdx ? { ...s, lines: [...s.lines, newLine()] } : s
+    ));
   }
 
   function deleteLine(sIdx: number, lIdx: number) {
-    setSections(prev => prev.map((s, i) => i === sIdx
-      ? { ...s, lines: s.lines.filter((_, li) => li !== lIdx) }
-      : s));
+    setSections(prev => prev.map((s, i) =>
+      i === sIdx ? { ...s, lines: s.lines.filter((_, li) => li !== lIdx) } : s
+    ));
   }
 
-  function updateLyrics(sIdx: number, lIdx: number, lyrics: string) {
-    setSections(prev => prev.map((s, si) => si === sIdx
-      ? { ...s, lines: s.lines.map((l, li) => li === lIdx ? { ...l, lyrics } : l) }
-      : s));
-  }
-
-  function addChord(sIdx: number, lIdx: number) {
-    setSections(prev => prev.map((s, si) => si === sIdx
-      ? { ...s, lines: s.lines.map((l, li) => li === lIdx
-          ? { ...l, chords: [...l.chords, { position: 0, chord: '' }] }
-          : l) }
-      : s));
-  }
-
-  function updateChord(sIdx: number, lIdx: number, cIdx: number, field: keyof ChordEntry, value: string | number) {
-    setSections(prev => prev.map((s, si) => si === sIdx
-      ? { ...s, lines: s.lines.map((l, li) => li === lIdx
-          ? { ...l, chords: l.chords.map((c, ci) => ci === cIdx ? { ...c, [field]: value } : c) }
-          : l) }
-      : s));
-  }
-
-  function deleteChord(sIdx: number, lIdx: number, cIdx: number) {
-    setSections(prev => prev.map((s, si) => si === sIdx
-      ? { ...s, lines: s.lines.map((l, li) => li === lIdx
-          ? { ...l, chords: l.chords.filter((_, ci) => ci !== cIdx) }
-          : l) }
-      : s));
+  function updateLine(sIdx: number, lIdx: number, updated: LineData) {
+    setSections(prev => prev.map((s, si) =>
+      si === sIdx
+        ? { ...s, lines: s.lines.map((l, li) => li === lIdx ? updated : l) }
+        : s
+    ));
   }
 
   async function handleSubmit() {
@@ -170,18 +165,18 @@ export default function SubmitChord() {
     setSubmitting(true);
     setMessage('');
     try {
-      const res = await apiFetch('/chords', {
+      const res = await apiFetch('/tracks', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
         body: JSON.stringify({
           TrackId: selectedTrack.trackId,
           ContributorId: contributor.id,
           ContributorEmail: contributor.email,
           Content: sections.map(s => ({
-            Type: s.type,
+            Type: s.type ?? '',
             Lines: s.lines.map(l => ({
               Lyrics: l.lyrics,
               Chords: Object.fromEntries(l.chords.map(c => [String(c.position), c.chord])),
@@ -204,7 +199,7 @@ export default function SubmitChord() {
 
       {!selectedTrack ? (
         <div className="track-search-section">
-          <p className="section-hint">First, find the track you want to add chords for.</p>
+          <p className="section-hint">Find the track you want to add chords for.</p>
           <form className="search-form" onSubmit={searchTracks}>
             <input
               type="text"
@@ -230,6 +225,7 @@ export default function SubmitChord() {
         </div>
       ) : (
         <div className="chord-editor-section">
+          {/* Track bar */}
           <div className="selected-track-bar">
             <div>
               <strong>{selectedTrack.title}</strong>
@@ -240,64 +236,61 @@ export default function SubmitChord() {
             </button>
           </div>
 
+          {/* Lyrics import */}
+          <div className="lyrics-import-bar">
+            <button
+              className="btn-import-lyrics"
+              onClick={importLyrics}
+              disabled={lyricsStatus === 'loading'}
+            >
+              {lyricsStatus === 'loading' ? 'Fetching lyrics…' : lyricsStatus === 'done' ? 'Re-import lyrics' : 'Import lyrics'}
+            </button>
+            {lyricsStatus === 'done' && (
+              <span className="import-status import-status--ok">Lyrics imported — add chords by clicking above any line.</span>
+            )}
+            {lyricsStatus === 'not_found' && (
+              <span className="import-status import-status--warn">Lyrics not found on Genius — add them manually.</span>
+            )}
+            {lyricsStatus === 'error' && (
+              <span className="import-status import-status--err">Couldn't fetch lyrics. Try again or add manually.</span>
+            )}
+          </div>
+
+          {/* Editor */}
           <div className="sections-container">
             {sections.map((section, sIdx) => (
-              <div key={section.id} className="section-card">
-                <div className="section-header">
-                  <select
-                    value={section.type}
-                    onChange={e => updateSectionType(sIdx, e.target.value)}
-                  >
-                    {SECTION_TYPES.map(t => <option key={t}>{t}</option>)}
-                  </select>
+              <div key={section.id} className="section-group">
+                <div className="section-label-row">
+                  {section.type !== null ? (
+                    <select
+                      className="section-type-select"
+                      value={section.type}
+                      onChange={e => updateSectionType(sIdx, e.target.value || null)}
+                    >
+                      <option value="">— remove label —</option>
+                      {SECTION_TYPES.map(t => <option key={t}>{t}</option>)}
+                    </select>
+                  ) : (
+                    <button className="btn-add-label" onClick={() => updateSectionType(sIdx, 'Verse')}>
+                      + label
+                    </button>
+                  )}
                   <button className="btn-danger-sm" onClick={() => deleteSection(sIdx)}>Delete part</button>
                 </div>
 
-                {section.lines.map((line, lIdx) => {
-                  const preview = chordPreviewLine(line.lyrics, line.chords);
-                  return (
-                    <div key={line.id} className="line-editor">
-                      {preview && <pre className="chord-preview-bar">{preview}</pre>}
-                      <div className="line-row">
-                        <input
-                          className="lyrics-input"
-                          type="text"
-                          placeholder="Lyrics…"
-                          value={line.lyrics}
-                          onChange={e => updateLyrics(sIdx, lIdx, e.target.value)}
-                        />
-                        {section.lines.length > 1 && (
-                          <button className="btn-remove-line" onClick={() => deleteLine(sIdx, lIdx)} title="Remove line">×</button>
-                        )}
-                      </div>
-                      <div className="chord-entries-row">
-                        {line.chords.map((c, cIdx) => (
-                          <span key={cIdx} className="chord-entry">
-                            <input
-                              className="chord-name-input"
-                              type="text"
-                              placeholder="Am"
-                              value={c.chord}
-                              onChange={e => updateChord(sIdx, lIdx, cIdx, 'chord', e.target.value)}
-                            />
-                            <span className="at-label">@</span>
-                            <input
-                              className="position-input"
-                              type="number"
-                              min={0}
-                              value={c.position}
-                              onChange={e => updateChord(sIdx, lIdx, cIdx, 'position', Number(e.target.value))}
-                            />
-                            <button className="btn-remove-chord" onClick={() => deleteChord(sIdx, lIdx, cIdx)}>×</button>
-                          </span>
-                        ))}
-                        <button className="btn-add-chord" onClick={() => addChord(sIdx, lIdx)}>+ chord</button>
-                      </div>
-                    </div>
-                  );
-                })}
+                {section.lines.map((line, lIdx) => (
+                  <ChordLine
+                    key={line.id}
+                    line={line}
+                    showDelete={section.lines.length > 1}
+                    onChange={updated => updateLine(sIdx, lIdx, updated)}
+                    onDelete={() => deleteLine(sIdx, lIdx)}
+                  />
+                ))}
 
                 <button className="btn-add-line" onClick={() => addLine(sIdx)}>+ Add line</button>
+
+                {sIdx < sections.length - 1 && <hr className="section-break" />}
               </div>
             ))}
           </div>

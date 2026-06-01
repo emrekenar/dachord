@@ -6,5 +6,6 @@ public enum ErrorCode
     InvalidCredentials,
     UserNotFound,
     TrackNotFound,
+    LyricsNotFound,
     InvalidRequest,
 }

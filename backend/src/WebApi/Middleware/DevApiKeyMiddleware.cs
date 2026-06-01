@@ -6,7 +6,7 @@ public class DevApiKeyMiddleware(RequestDelegate next, IConfiguration config, IW
 
     public async Task InvokeAsync(HttpContext context)
     {
-        if (!env.IsProduction())
+        if (!env.IsProduction() && !env.IsDevelopment())
         {
             var expectedKey = config["DevApiKey"];
             if (!string.IsNullOrEmpty(expectedKey))
