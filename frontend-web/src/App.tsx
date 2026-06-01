@@ -3,13 +3,29 @@ import { useState, useEffect } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import SearchBar from './Search/SearchBar';
 
+function isTokenValid(): boolean {
+  const token = localStorage.getItem('token');
+  if (!token) return false;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    if (payload.exp && payload.exp * 1000 < Date.now()) {
+      localStorage.removeItem('token');
+      return false;
+    }
+    return true;
+  } catch {
+    localStorage.removeItem('token');
+    return false;
+  }
+}
+
 function App() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
+  const [isLoggedIn, setIsLoggedIn] = useState(isTokenValid);
 
   useEffect(() => {
-    setIsLoggedIn(!!localStorage.getItem('token'));
+    setIsLoggedIn(isTokenValid());
   }, [location]);
 
   const isSearchPage = location.pathname === '/' || location.pathname === '/search';

@@ -291,6 +291,7 @@
   max-width: 800px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.07);
   color: #232946;
+  text-align: left;
 }
 .chord-view-meta { display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem; color: #555; font-size: 0.9rem; }
 .chord-sheet { font-family: monospace; }
@@ -340,22 +341,66 @@
   font-size: 0.95rem; font-weight: 600; color: #232946; background: #f4f6fb; cursor: pointer;
 }
 
-.line-editor { margin-bottom: 0.8rem; padding-bottom: 0.8rem; border-bottom: 1px solid #e8ecf5; }
-.line-editor:last-of-type { border-bottom: none; }
-.chord-preview-bar {
-  margin: 0 0 0.1rem; padding: 0; font-family: monospace; font-size: 0.9rem;
-  color: #ee5d5d; font-weight: 700; white-space: pre; background: none; line-height: 1.4;
+/* ── Chord line (click-to-add UX) ────────────────────────────── */
+.chord-line { margin-bottom: 0.5rem; }
+.chord-row {
+  position: relative; height: 1.4em; cursor: text; user-select: none;
+  font-family: monospace; font-size: 0.95rem; min-height: 1.4em;
+}
+.chord-row:hover { background: rgba(238,187,195,0.08); border-radius: 3px; }
+.chord-token {
+  position: absolute; top: 0;
+  font-family: monospace; font-size: 0.95rem; font-weight: 700;
+  color: #ee5d5d; white-space: pre; line-height: 1.4; pointer-events: none;
+}
+.chord-inline-input {
+  position: absolute; top: -1px;
+  width: 4ch; min-width: 3ch; padding: 0;
+  border: none; border-bottom: 2px solid #ee5d5d; background: transparent;
+  font-family: monospace; font-size: 0.95rem; font-weight: 700;
+  color: #ee5d5d; outline: none; line-height: 1.4;
 }
 .line-row { display: flex; gap: 0.4rem; align-items: center; }
 .lyrics-input {
-  flex: 1; padding: 0.5rem 0.7rem; border-radius: 6px; border: 1px solid #b8c1ec;
-  font-family: monospace; font-size: 0.95rem; color: #232946;
+  flex: 1; padding: 0.45rem 0.7rem; border-radius: 6px; border: 1px solid #b8c1ec;
+  font-family: monospace; font-size: 0.95rem; color: #232946; background: #fff;
 }
-.chord-entries-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.4rem; align-items: center; }
-.chord-entry { display: flex; align-items: center; gap: 0.25rem; background: #f4f6fb; border: 1px solid #b8c1ec; border-radius: 6px; padding: 0.25rem 0.4rem; }
-.chord-name-input { width: 48px; padding: 0.2rem 0.3rem; border-radius: 4px; border: 1px solid #b8c1ec; font-family: monospace; font-size: 0.9rem; text-align: center; font-weight: 700; color: #ee5d5d; }
-.at-label { font-size: 0.75rem; color: #888; }
-.position-input { width: 42px; padding: 0.2rem 0.3rem; border-radius: 4px; border: 1px solid #b8c1ec; font-size: 0.85rem; text-align: center; }
+
+/* ── Section groups (flat layout with optional labels) ─────── */
+.section-group { margin-bottom: 0.8rem; }
+.section-label-row {
+  display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; min-height: 1.8rem;
+}
+.section-type-select {
+  padding: 0.3rem 0.5rem; border-radius: 5px; border: 1px solid #b8c1ec;
+  font-size: 0.88rem; font-weight: 600; color: #232946; background: #f4f6fb; cursor: pointer;
+}
+.btn-add-label {
+  background: none; border: 1px dashed #b8c1ec; color: #999;
+  padding: 0.2rem 0.7rem; border-radius: 5px; cursor: pointer; font-size: 0.8rem; transition: all 0.15s;
+}
+.btn-add-label:hover { border-color: #eebbc3; color: #232946; }
+.section-break {
+  border: none; border-top: 1px dashed #d0d5e8; margin: 0.8rem 0;
+}
+
+/* ── Lyrics import bar ────────────────────────────────────── */
+.lyrics-import-bar {
+  display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap;
+  margin-bottom: 1.2rem; padding: 0.7rem 0.9rem;
+  background: #f4f6fb; border: 1px solid #b8c1ec; border-radius: 8px;
+}
+.btn-import-lyrics {
+  background: #232946; color: #fff; border: none;
+  padding: 0.45rem 1.1rem; border-radius: 6px; cursor: pointer;
+  font-size: 0.9rem; font-weight: 600; white-space: nowrap; transition: background 0.15s;
+}
+.btn-import-lyrics:hover:not(:disabled) { background: #3a4060; }
+.btn-import-lyrics:disabled { opacity: 0.6; cursor: default; }
+.import-status { font-size: 0.85rem; }
+.import-status--ok   { color: #2d8a4e; }
+.import-status--warn { color: #b07800; }
+.import-status--err  { color: #cc3333; }
 
 .editor-actions { display: flex; gap: 0.8rem; align-items: center; margin-top: 0.5rem; flex-wrap: wrap; }
 

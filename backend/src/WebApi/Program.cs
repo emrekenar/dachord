@@ -6,11 +6,14 @@ using WebApi.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Structured JSON logs — Lambda pipes stdout to CloudWatch Logs automatically
-builder.Logging.ClearProviders();
-builder.Logging.AddJsonConsole(o => o.JsonWriterOptions = new() { Indented = false });
-
 var isLambda = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME"));
+
+// JSON logs in Lambda (CloudWatch), plain console locally
+builder.Logging.ClearProviders();
+if (isLambda)
+    builder.Logging.AddJsonConsole(o => o.JsonWriterOptions = new() { Indented = false });
+else
+    builder.Logging.AddSimpleConsole(o => { o.SingleLine = true; o.IncludeScopes = false; });
 
 // secrets.json is gitignored — copy it locally or into any deployment environment as needed
 builder.Configuration.AddJsonFile("secrets.json", optional: true, reloadOnChange: false);
@@ -33,7 +36,11 @@ ServiceConfiguration.ConfigureServices(builder);
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
+{
     app.UseDeveloperExceptionPage();
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 app.UseMiddleware<LambdaMethodFixMiddleware>();
 app.UseCors();

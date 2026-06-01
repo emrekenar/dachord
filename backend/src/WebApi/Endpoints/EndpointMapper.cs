@@ -68,6 +68,13 @@ public static class EndpointMapper
                 : result.Results.Count == 0 ? Results.NotFound()
                 : Results.Ok(result);
         });
+
+        app.MapGet("/tracks/{trackId}/lyrics", async (string trackId, IGetLyricsService getLyricsService) =>
+        {
+            var result = await getLyricsService.ExecuteAsync(trackId);
+            return result.IsSuccess ? Results.Ok(result.Value) : Results.NotFound(result.Error);
+        })
+        .RequireAuthorization();
     }
 
     private static void MapTestEndpoints(WebApplication app)
