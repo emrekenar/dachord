@@ -102,7 +102,6 @@ Resources:
         AllowHeaders:
           - Content-Type
           - Authorization
-          - X-Dev-Key
         AllowMethods:
           - GET
           - POST
