@@ -1,26 +1,35 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../api';
 
 export default function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
+  const navigate = useNavigate();
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const data = {
-        Email: email,
-        Password: password
-    };
+    const data = { Email: email, Password: password };
     apiFetch('/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     })
       .then(res => {
-        if (res.ok) setMessage('Registration successful!');
-        else if (res.status === 400) setMessage('Email already in use.');
-        else setMessage('Failed to register.');
+        if (res.ok) {
+          return apiFetch('/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          }).then(r => r.json()).then(d => {
+            if (d?.token) {
+              localStorage.setItem('token', d.token);
+              navigate('/');
+            }
+          });
+        }
+        setMessage(res.status === 400 ? 'Email already in use.' : 'Failed to register.');
       })
       .catch(() => setMessage('Failed to register.'));
   }

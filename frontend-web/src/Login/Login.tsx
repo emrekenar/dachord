@@ -1,35 +1,29 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../api';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
+  const navigate = useNavigate();
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const data = {
-        Email: email,
-        Password: password
-    };
+    const data = { Email: email, Password: password };
     apiFetch('/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     })
       .then(res => {
-        if (res.ok) {
-          setMessage('Login successful!');
-          return res.json();
-        } else if (res.status === 400) {
-          setMessage('Invalid email or password.');
-        } else {
-          setMessage('Failed to login.');
-        }
+        if (res.ok) return res.json();
+        setMessage(res.status === 400 ? 'Invalid email or password.' : 'Failed to login.');
       })
       .then(data => {
-        if (data && data.token) {
+        if (data?.token) {
           localStorage.setItem('token', data.token);
+          navigate('/');
         }
       })
       .catch(() => setMessage('Failed to login.'));

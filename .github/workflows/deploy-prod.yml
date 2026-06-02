@@ -64,7 +64,7 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          VITE_API_URL: ${{ needs.deploy-backend.outputs.api_url }}
+          VITE_API_BASE: ${{ needs.deploy-backend.outputs.api_url }}
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/dachord-github-deploy
