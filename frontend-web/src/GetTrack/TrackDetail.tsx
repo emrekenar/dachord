@@ -11,16 +11,29 @@ interface Track {
   url?: string;
 }
 
+interface ChordVersion {
+  trackId: string;
+  contributorName?: string;
+  isApproved: boolean;
+  likeCount: number;
+  updatedAt: string;
+}
+
 export default function TrackDetail() {
   const { id } = useParams();
   const [track, setTrack] = useState<Track | null>(null);
+  const [versions, setVersions] = useState<ChordVersion[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    apiFetch(`/track/${id}`)
-      .then(res => (res.ok ? res.json() : null))
-      .then(data => { setTrack(data); setLoading(false); })
-      .catch(() => setLoading(false));
+    Promise.all([
+      apiFetch(`/track/${id}`).then(res => res.ok ? res.json() : null),
+      apiFetch(`/tracks/${id}/chords`).then(res => res.ok ? res.json() : []),
+    ]).then(([trackData, chordsData]) => {
+      setTrack(trackData);
+      setVersions(chordsData ?? []);
+      setLoading(false);
+    }).catch(() => setLoading(false));
   }, [id]);
 
   if (loading) return <div className="track-detail"><p>Loading…</p></div>;
@@ -44,10 +57,24 @@ export default function TrackDetail() {
               )}
             </div>
           </div>
-          <p className="empty-state" style={{ marginTop: '1.5rem' }}>
-            No chord sheets yet for this track.{' '}
-            <Link to={`/submit/${id}`}>Be the first to add one!</Link>
-          </p>
+
+          {versions.length > 0 ? (
+            <div className="chord-versions-list">
+              <h3>Chord Sheets</h3>
+              {versions.map((v, i) => (
+                <Link key={i} to={`/chords/${v.trackId}`} className="chord-version-item">
+                  <span className="contributor-name">{v.contributorName ?? 'Anonymous'}</span>
+                  {v.isApproved && <span className="approved-badge">✓</span>}
+                  <span className="like-count">♥ {v.likeCount}</span>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p className="empty-state" style={{ marginTop: '1.5rem' }}>
+              No chord sheets yet for this track.{' '}
+              <Link to={`/submit/${id}`}>Be the first to add one!</Link>
+            </p>
+          )}
         </>
       ) : (
         <p className="empty-state">Track not found.</p>

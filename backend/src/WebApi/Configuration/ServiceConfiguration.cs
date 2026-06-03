@@ -17,7 +17,6 @@ public static class ServiceConfiguration
 
         builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
         builder.Services.Configure<SpotifyOptions>(builder.Configuration.GetSection(SpotifyOptions.SectionName));
-        builder.Services.Configure<GeniusOptions>(builder.Configuration.GetSection(GeniusOptions.SectionName));
         builder.Services.Configure<MusicTheoryOptions>(builder.Configuration.GetSection(MusicTheoryOptions.SectionName));
         builder.Services.AddMemoryCache();
 
@@ -28,8 +27,11 @@ public static class ServiceConfiguration
         builder.Services.AddScoped<ISubmitChordsService, SubmitChordsService>();
         builder.Services.AddScoped<IGetLyricsService, GetLyricsService>();
         builder.Services.AddHttpClient<ISearchTracksService, SpotifySearchTracksService>();
-        builder.Services.AddHttpClient("Genius");
-        builder.Services.AddSingleton<ILyricsService, GeniusLyricsService>();
+        builder.Services.AddHttpClient("Lrclib", client =>
+        {
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("Dachord/1.0 (https://github.com/emrekenar/dachord)");
+        });
+        builder.Services.AddSingleton<ILyricsService, LrclibLyricsService>();
 
         builder.Services.AddCors(options =>
         {

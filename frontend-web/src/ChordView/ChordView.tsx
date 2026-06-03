@@ -5,6 +5,7 @@ import { apiFetch } from '../api';
 interface Line {
   lyrics: string;
   chords: Record<string, string>;
+  timeMs?: number;
 }
 
 interface Section {
@@ -19,6 +20,13 @@ interface TrackVersion {
   likeCount: number;
   updatedAt: string;
   content: Section[];
+}
+
+function formatTime(ms: number): string {
+  const totalSeconds = Math.floor(ms / 1000);
+  const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+  const s = (totalSeconds % 60).toString().padStart(2, '0');
+  return `${m}:${s}`;
 }
 
 function buildChordLine(lyrics: string, chords: Record<string, string>): string {
@@ -79,6 +87,7 @@ export default function ChordView() {
               const chordLine = buildChordLine(line.lyrics, line.chords);
               return (
                 <div key={lIdx} className="chord-line-pair">
+                  {line.timeMs != null && <span className="line-timestamp">{formatTime(line.timeMs)}</span>}
                   {chordLine && <pre className="chord-names">{chordLine}</pre>}
                   <pre className="lyric-text">{line.lyrics || ' '}</pre>
                 </div>
