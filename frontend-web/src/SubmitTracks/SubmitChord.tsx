@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { apiFetch } from '../api';
 import ChordLine, { type LineData } from './ChordLine';
 
@@ -21,7 +21,7 @@ interface SectionState {
 // API response shape from GET /tracks/{id}/lyrics
 interface ApiSection {
   type: string;
-  lines: { lyrics: string; chords: Record<string, string> }[];
+  lines: { lyrics: string; chords: Record<string, string>; timeMs?: number }[];
 }
 
 type LyricsStatus = 'idle' | 'loading' | 'done' | 'not_found' | 'error';
@@ -49,6 +49,7 @@ function getContributorFromToken(): { id: string; email: string } | null {
 
 export default function SubmitChord() {
   const { trackId } = useParams<{ trackId?: string }>();
+  const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [trackResults, setTrackResults] = useState<TrackResult[]>([]);
   const [searching, setSearching] = useState(false);
@@ -110,7 +111,7 @@ export default function SubmitChord() {
         const imported: SectionState[] = (data.sections as ApiSection[]).map(s => ({
           id: crypto.randomUUID(),
           type: s.type || null,
-          lines: s.lines.map(l => ({ id: crypto.randomUUID(), lyrics: l.lyrics, chords: [] })),
+          lines: s.lines.map(l => ({ id: crypto.randomUUID(), lyrics: l.lyrics, chords: [], timeMs: l.timeMs })),
         }));
         setSections(imported.length > 0 ? imported : [{ id: crypto.randomUUID(), type: null, lines: [newLine()] }]);
         setLyricsStatus('done');
@@ -184,7 +185,7 @@ export default function SubmitChord() {
           })),
         }),
       });
-      if (res.ok) setMessage('Chord sheet submitted!');
+      if (res.ok) { navigate(-1); return; }
       else if (res.status === 401) setMessage('Please log in to submit.');
       else if (res.status === 400) setMessage('Invalid request — check all fields.');
       else setMessage('Failed to submit.');
@@ -245,11 +246,14 @@ export default function SubmitChord() {
             >
               {lyricsStatus === 'loading' ? 'Fetching lyrics…' : lyricsStatus === 'done' ? 'Re-import lyrics' : 'Import lyrics'}
             </button>
+            {lyricsStatus === 'loading' && (
+              <span className="import-status import-status--info">Hang on, this can take a few seconds…</span>
+            )}
             {lyricsStatus === 'done' && (
               <span className="import-status import-status--ok">Lyrics imported — add chords by clicking above any line.</span>
             )}
             {lyricsStatus === 'not_found' && (
-              <span className="import-status import-status--warn">Lyrics not found on Genius — add them manually.</span>
+              <span className="import-status import-status--warn">Lyrics not found — add them manually.</span>
             )}
             {lyricsStatus === 'error' && (
               <span className="import-status import-status--err">Couldn't fetch lyrics. Try again or add manually.</span>

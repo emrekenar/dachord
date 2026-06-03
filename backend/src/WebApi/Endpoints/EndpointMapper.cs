@@ -69,6 +69,12 @@ public static class EndpointMapper
                 : Results.Ok(result);
         });
 
+        app.MapGet("/tracks/{trackId}/chords", async (string trackId, ITrackRepository trackRepository) =>
+        {
+            var versions = await trackRepository.GetTrackVersionsAsync(trackId);
+            return Results.Ok(versions);
+        });
+
         app.MapGet("/tracks/{trackId}/lyrics", async (string trackId, IGetLyricsService getLyricsService) =>
         {
             var result = await getLyricsService.ExecuteAsync(trackId);

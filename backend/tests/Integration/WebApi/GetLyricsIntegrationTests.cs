@@ -16,37 +16,34 @@ using IntegrationTests.TestInfrastructure;
 public class GetLyricsIntegrationTests : IClassFixture<IntegrationFixture>
 {
     private const string TrackId = "test-lyrics-track";
-    private const string LyricsPageUrl = "https://genius.com/test-artist-test-song-lyrics";
 
-    private const string SampleLyricsHtml = """
-        <html><body>
-        <div data-lyrics-container="true">
+    private const string SamplePlainLyrics = """
         [Verse 1]
-        First line of the verse<br>Second line of the verse<br>
+        First line of the verse
+        Second line of the verse
+
         [Chorus]
-        First chorus line<br>Second chorus line<br>
-        </div>
-        </body></html>
+        First chorus line
+        Second chorus line
         """;
 
-    private readonly FakeGeniusHttpMessageHandler _geniusHandler = new();
+    private readonly FakeLrclibHttpMessageHandler _lrclibHandler = new();
     private readonly HttpClient _client;
 
     public GetLyricsIntegrationTests(IntegrationFixture fixture)
     {
-        _geniusHandler.SetupSearchResponse(LyricsPageUrl);
-        _geniusHandler.SetupLyricsPageHtml(SampleLyricsHtml);
+        _lrclibHandler.SetupLyrics(SamplePlainLyrics);
 
         // StubSearchTracksService returns a track only for TrackId — null for anything else.
-        // FakeGeniusHttpMessageHandler intercepts all Genius HTTP traffic so real parsing runs.
+        // FakeLrclibHttpMessageHandler intercepts all lrclib HTTP traffic so real parsing runs.
         var factory = fixture.Factory!.WithWebHostBuilder(builder =>
         {
             builder.ConfigureTestServices(services =>
             {
                 services.AddSingleton<ISearchTracksService>(
                     new StubSearchTracksService(TrackId, "Test Artist", "Test Song"));
-                services.AddHttpClient("Genius")
-                    .ConfigurePrimaryHttpMessageHandler(() => _geniusHandler);
+                services.AddHttpClient("Lrclib")
+                    .ConfigurePrimaryHttpMessageHandler(() => _lrclibHandler);
             });
         });
 
@@ -85,9 +82,9 @@ public class GetLyricsIntegrationTests : IClassFixture<IntegrationFixture>
     }
 
     [Fact]
-    public async Task GetLyrics_WhenGeniusReturnsNoHits_Returns404WithLyricsNotFound()
+    public async Task GetLyrics_WhenLrclibReturns404_Returns404WithLyricsNotFound()
     {
-        _geniusHandler.SetupNoHits();
+        _lrclibHandler.SetupNotFound();
         var token = await GetTokenAsync();
         var request = new HttpRequestMessage(HttpMethod.Get, $"/tracks/{TrackId}/lyrics");
         request.Headers.Add("Authorization", $"Bearer {token}");

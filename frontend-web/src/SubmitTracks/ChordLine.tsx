@@ -1,7 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 
 export interface ChordEntry { position: number; chord: string; }
-export interface LineData { id: string; lyrics: string; chords: ChordEntry[]; }
+export interface LineData { id: string; lyrics: string; chords: ChordEntry[]; timeMs?: number; }
+
+function formatTime(ms: number): string {
+  const totalSeconds = Math.floor(ms / 1000);
+  const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+  const s = (totalSeconds % 60).toString().padStart(2, '0');
+  return `${m}:${s}`;
+}
 
 interface Props {
   line: LineData;
@@ -68,6 +75,7 @@ export default function ChordLine({ line, onChange, onDelete, showDelete }: Prop
 
   return (
     <div className="chord-line">
+      {line.timeMs != null && <span className="line-timestamp">{formatTime(line.timeMs)}</span>}
       {/* Chord row — click anywhere to place or edit a chord */}
       <div className="chord-row" onClick={handleRowClick} title="Click to add a chord">
         {sorted.map(c =>

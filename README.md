@@ -1,5 +1,12 @@
 # dachord
 
+## Third-party services
+
+- **[Spotify Web API](https://developer.spotify.com/documentation/web-api)** — track search and metadata. Requires a free Spotify developer account.
+- **[LRCLIB](https://lrclib.net)** — free, open lyrics API with synced (LRC) lyrics support. No API key required.
+
+---
+
 ## Local development
 
 ### Prerequisites
