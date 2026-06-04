@@ -52,8 +52,7 @@ export default function SearchResults({ results, hideAlbum = false }: Props) {
                     <Link to={`/chords/${track.trackId}`}>
                       {v.contributorName ? `by ${v.contributorName}` : 'View chords'}
                     </Link>
-                    <span className="like-count">♥ {v.likeCount}</span>
-                    {v.isApproved && <span className="approved-badge">✓</span>}
+                    {v.isApproved && <span className="approved-badge">✓ approved</span>}
                   </li>
                 ))}
               </ul>

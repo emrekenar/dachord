@@ -23,7 +23,7 @@ export default function Login() {
       .then(data => {
         if (data?.token) {
           localStorage.setItem('token', data.token);
-          navigate('/');
+          navigate('/', { state: { toast: 'Logged in!' } });
         }
       })
       .catch(() => setMessage('Failed to login.'));

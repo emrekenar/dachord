@@ -23,10 +23,21 @@ function App() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(isTokenValid);
+  const [toast, setToast] = useState('');
 
   useEffect(() => {
     setIsLoggedIn(isTokenValid());
   }, [location]);
+
+  useEffect(() => {
+    const msg = (location.state as { toast?: string } | null)?.toast
+      ?? sessionStorage.getItem('toast') ?? '';
+    sessionStorage.removeItem('toast');
+    if (!msg) return;
+    setToast(msg);
+    const id = setTimeout(() => setToast(''), 2500);
+    return () => clearTimeout(id);
+  }, [location.key]);
 
   const isSearchPage = location.pathname === '/' || location.pathname === '/search';
 
@@ -34,6 +45,7 @@ function App() {
     localStorage.removeItem('token');
     setIsLoggedIn(false);
     navigate('/');
+    setToast('Logged out!');
   }
 
   return (
@@ -43,7 +55,11 @@ function App() {
           <Link to="/" className="app-logo">dachord</Link>
           <nav>
             {isLoggedIn ? (
-              <button className="nav-logout-btn" onClick={handleLogout}>Log out</button>
+              <>
+                <Link to="/profile" className="nav-profile-link">Profile</Link>
+                <span className="nav-sep">|</span>
+                <button className="nav-logout-btn" onClick={handleLogout}>Log out</button>
+              </>
             ) : (
               <>
                 <Link to="/register">Register</Link>
@@ -60,6 +76,7 @@ function App() {
         )}
       </header>
       <Outlet />
+      {toast && <div className="toast">{toast}</div>}
     </>
   );
 }

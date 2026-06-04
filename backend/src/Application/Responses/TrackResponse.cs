@@ -9,4 +9,5 @@ public class TrackResponse
     public required string AlbumId { get; set; }
     public required string AlbumName { get; set; }
     public string Url { get; set; } = string.Empty;
+    public string? ReleaseYear { get; set; }
 }

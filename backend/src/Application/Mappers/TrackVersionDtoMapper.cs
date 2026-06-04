@@ -6,13 +6,13 @@ using Domain.Models.Track;
 
 public static class TrackVersionDtoMapper
 {
-    public static TrackVersion MapFromRequest(SubmitChordsRequest request)
+    public static TrackVersion MapFromRequest(SubmitChordsRequest request, string? resolvedDisplayName)
     {
         return new TrackVersion
         {
             TrackId = request.TrackId,
             ContributorId = request.ContributorId,
-            ContributorName = request.ContributorName,
+            ContributorName = resolvedDisplayName,
             ContributorEmail = request.ContributorEmail,
             Content = request.Content,
         };

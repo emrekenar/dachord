@@ -35,7 +35,7 @@ describe('Login', () => {
 
     await waitFor(() => {
       expect(localStorage.getItem('token')).toBe('tok123');
-      expect(mockNavigate).toHaveBeenCalledWith('/');
+      expect(mockNavigate).toHaveBeenCalledWith('/', { state: { toast: 'Logged in!' } });
     });
   });
 

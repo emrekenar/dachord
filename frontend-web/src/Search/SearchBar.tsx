@@ -9,12 +9,13 @@ interface Props {
 export default function SearchBar({ initialValue = '', onNavigate }: Props) {
   const [query, setQuery] = useState(initialValue);
   const [open, setOpen] = useState(false);
+  const [dirty, setDirty] = useState(false);
   const { suggestions } = useSearchSuggestions(query);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setOpen(suggestions.length > 0);
-  }, [suggestions]);
+    setOpen(dirty && suggestions.length > 0);
+  }, [suggestions, dirty]);
 
   useEffect(() => {
     function handleMouseDown(e: MouseEvent) {
@@ -26,14 +27,21 @@ export default function SearchBar({ initialValue = '', onNavigate }: Props) {
     return () => document.removeEventListener('mousedown', handleMouseDown);
   }, []);
 
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setDirty(true);
+    setQuery(e.target.value);
+  }
+
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === 'Enter' && query.trim().length > 2) {
+      setDirty(false);
       setOpen(false);
       onNavigate(`/search?q=${encodeURIComponent(query.trim())}`);
     }
   }
 
   function navigate(path: string) {
+    setDirty(false);
     setOpen(false);
     onNavigate(path);
   }
@@ -45,7 +53,7 @@ export default function SearchBar({ initialValue = '', onNavigate }: Props) {
           type="text"
           placeholder="Search by song or artist..."
           value={query}
-          onChange={e => setQuery(e.target.value)}
+          onChange={handleChange}
           onKeyDown={handleKeyDown}
         />
       </div>

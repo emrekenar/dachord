@@ -45,4 +45,12 @@ public class UserRepository(IDynamoDBContext dynamoDbContext, IAmazonDynamoDB dy
         var item = UserMapper.MapToEntity(user);
         await dynamoDbContext.SaveAsync(item);
     }
+
+    public async Task UpdateDisplayNameAsync(string userId, string displayName)
+    {
+        var item = await dynamoDbContext.LoadAsync<UserItem>(userId);
+        if (item is null) return;
+        item.DisplayName = displayName;
+        await dynamoDbContext.SaveAsync(item);
+    }
 }
