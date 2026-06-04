@@ -35,7 +35,7 @@ describe('Register', () => {
 
     await waitFor(() => {
       expect(localStorage.getItem('token')).toBe('tok456');
-      expect(mockNavigate).toHaveBeenCalledWith('/');
+      expect(mockNavigate).toHaveBeenCalledWith('/', { state: { toast: 'Registered successfully!' } });
     });
   });
 

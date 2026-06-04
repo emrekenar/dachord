@@ -7,6 +7,7 @@ interface Track {
   title: string;
   artistName: string;
   albumName: string;
+  releaseYear?: string;
   imageUrl?: string;
   url?: string;
 }
@@ -49,7 +50,7 @@ export default function TrackDetail() {
             <div className="track-detail-meta">
               <h2>{track.title}</h2>
               <p className="artist-name">{track.artistName}</p>
-              <p className="album-name">{track.albumName}</p>
+              <p className="album-name">{track.albumName}{track.releaseYear ? ` (${track.releaseYear})` : ''}</p>
               {track.url && (
                 <a href={track.url} target="_blank" rel="noopener noreferrer" className="spotify-link">
                   Open on Spotify

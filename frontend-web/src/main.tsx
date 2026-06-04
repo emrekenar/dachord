@@ -10,6 +10,7 @@ import Search from './Search/Search';
 import SubmitChord from './SubmitTracks/SubmitChord';
 import ChordView from './ChordView/ChordView';
 import TrackDetail from './GetTrack/TrackDetail';
+import Profile from './Profile/Profile';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -23,6 +24,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="register" element={<Register />} />
           <Route path="chords/:id" element={<ChordView />} />
           <Route path="track/:id" element={<TrackDetail />} />
+          <Route path="profile" element={<Profile />} />
         </Route>
       </Routes>
     </BrowserRouter>

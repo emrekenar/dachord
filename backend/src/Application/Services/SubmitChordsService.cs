@@ -11,6 +11,7 @@ using Application.Mappers;
 
 public class SubmitChordsService(
     ITrackRepository trackRepository,
+    IUserRepository userRepository,
     ISearchTracksService searchTracksService,
     ILogger<SubmitChordsService> logger) : ISubmitChordsService
 {
@@ -33,7 +34,8 @@ public class SubmitChordsService(
             return Result<TrackVersionResponse>.Failure(new Error(ErrorCode.InvalidRequest, "Invalid request."));
         }
 
-        var trackVersion = TrackVersionDtoMapper.MapFromRequest(request);
+        var user = await userRepository.GetByIdAsync(request.ContributorId);
+        var trackVersion = TrackVersionDtoMapper.MapFromRequest(request, user?.DisplayName);
         await trackRepository.SaveTrackVersionAsync(trackVersion);
 
         var response = TrackVersionDtoMapper.MapToResponse(trackVersion);
@@ -42,11 +44,6 @@ public class SubmitChordsService(
 
     private static bool ValidateRequest(SubmitChordsRequest request)
     {
-        if (request.ContributorEmail == null && request.ContributorName == null
-            || request.Content.Count == 0)
-        {
-            return false;
-        }
-        return true;
+        return request.Content.Count > 0;
     }
 }

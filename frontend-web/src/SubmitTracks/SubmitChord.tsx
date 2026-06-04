@@ -30,7 +30,7 @@ function newLine(): LineData {
   return { id: crypto.randomUUID(), lyrics: '', chords: [] };
 }
 
-function getContributorFromToken(): { id: string; email: string } | null {
+function getContributorFromToken(): { id: string; email: string; displayName: string } | null {
   const token = localStorage.getItem('token');
   if (!token) return null;
   try {
@@ -41,7 +41,8 @@ function getContributorFromToken(): { id: string; email: string } | null {
     const email =
       payload.email ??
       payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'];
-    return id ? { id, email: email ?? '' } : null;
+    const displayName = payload.displayName ?? '';
+    return id ? { id, email: email ?? '', displayName } : null;
   } catch {
     return null;
   }
@@ -143,6 +144,15 @@ export default function SubmitChord() {
     ));
   }
 
+  function insertLine(sIdx: number, atIdx: number) {
+    setSections(prev => prev.map((s, i) => {
+      if (i !== sIdx) return s;
+      const lines = [...s.lines];
+      lines.splice(atIdx, 0, newLine());
+      return { ...s, lines };
+    }));
+  }
+
   function deleteLine(sIdx: number, lIdx: number) {
     setSections(prev => prev.map((s, i) =>
       i === sIdx ? { ...s, lines: s.lines.filter((_, li) => li !== lIdx) } : s
@@ -176,16 +186,18 @@ export default function SubmitChord() {
           TrackId: selectedTrack.trackId,
           ContributorId: contributor.id,
           ContributorEmail: contributor.email,
+          ContributorName: contributor.displayName || null,
           Content: sections.map(s => ({
             Type: s.type ?? '',
             Lines: s.lines.map(l => ({
               Lyrics: l.lyrics,
               Chords: Object.fromEntries(l.chords.map(c => [String(c.position), c.chord])),
+              TimeMs: l.timeMs,
             })),
           })),
         }),
       });
-      if (res.ok) { navigate(-1); return; }
+      if (res.ok) { sessionStorage.setItem('toast', 'Chord sheet submitted!'); navigate(-1); return; }
       else if (res.status === 401) setMessage('Please log in to submit.');
       else if (res.status === 400) setMessage('Invalid request — check all fields.');
       else setMessage('Failed to submit.');
@@ -289,6 +301,7 @@ export default function SubmitChord() {
                     showDelete={section.lines.length > 1}
                     onChange={updated => updateLine(sIdx, lIdx, updated)}
                     onDelete={() => deleteLine(sIdx, lIdx)}
+                    onInsertBefore={() => insertLine(sIdx, lIdx)}
                   />
                 ))}
 

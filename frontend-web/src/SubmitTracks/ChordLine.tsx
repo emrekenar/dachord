@@ -14,6 +14,7 @@ interface Props {
   line: LineData;
   onChange: (updated: LineData) => void;
   onDelete?: () => void;
+  onInsertBefore?: () => void;
   showDelete: boolean;
 }
 
@@ -32,7 +33,7 @@ function measureCharWidth(): number {
   return _cachedCharWidth;
 }
 
-export default function ChordLine({ line, onChange, onDelete, showDelete }: Props) {
+export default function ChordLine({ line, onChange, onDelete, onInsertBefore, showDelete }: Props) {
   const [editState, setEditState] = useState<{ pos: number; value: string } | null>(null);
   const [charWidth, setCharWidth] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -105,6 +106,9 @@ export default function ChordLine({ line, onChange, onDelete, showDelete }: Prop
 
       {/* Lyrics row */}
       <div className="line-row">
+        {onInsertBefore && (
+          <button className="btn-insert-before" onClick={onInsertBefore} title="Insert line above">+</button>
+        )}
         <input
           className="lyrics-input"
           type="text"

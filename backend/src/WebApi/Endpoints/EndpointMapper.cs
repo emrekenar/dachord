@@ -3,6 +3,7 @@ namespace WebApi.Endpoints;
 using Application.Interfaces;
 using Application.Requests;
 using Domain.Interfaces;
+using System.Security.Claims;
 
 public static class EndpointMapper
 {
@@ -26,6 +27,26 @@ public static class EndpointMapper
             var result = await loginService.ExecuteAsync(request);
             return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
         });
+
+        app.MapGet("/user/me", async (HttpContext ctx, IUserRepository userRepository) =>
+        {
+            var userId = ctx.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId is null) return Results.Unauthorized();
+            var user = await userRepository.GetByIdAsync(userId);
+            return user is not null
+                ? Results.Ok(new { displayName = user.DisplayName, role = user.Role.ToString() })
+                : Results.NotFound();
+        })
+        .RequireAuthorization();
+
+        app.MapPut("/user/display-name", async (UpdateDisplayNameRequest request, HttpContext ctx, IUpdateDisplayNameService service) =>
+        {
+            var userId = ctx.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId is null) return Results.Unauthorized();
+            await service.ExecuteAsync(userId, request.DisplayName);
+            return Results.Ok();
+        })
+        .RequireAuthorization();
     }
 
     private static void MapTrackEndpoints(WebApplication app)
@@ -79,6 +100,13 @@ public static class EndpointMapper
         {
             var result = await getLyricsService.ExecuteAsync(trackId);
             return result.IsSuccess ? Results.Ok(result.Value) : Results.NotFound(result.Error);
+        })
+        .RequireAuthorization();
+
+        app.MapPost("/chords/{trackId}/approve", async (string trackId, HttpContext ctx, IApproveChordService approveService) =>
+        {
+            var result = await approveService.ExecuteAsync(trackId);
+            return result.IsSuccess ? Results.Ok() : Results.NotFound(result.Error);
         })
         .RequireAuthorization();
     }

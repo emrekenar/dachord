@@ -25,7 +25,7 @@ export default function Register() {
           }).then(r => r.json()).then(d => {
             if (d?.token) {
               localStorage.setItem('token', d.token);
-              navigate('/');
+              navigate('/', { state: { toast: 'Registered successfully!' } });
             }
           });
         }

@@ -26,6 +26,8 @@ public static class ServiceConfiguration
         builder.Services.AddScoped<ILoginService, LoginService>();
         builder.Services.AddScoped<ISubmitChordsService, SubmitChordsService>();
         builder.Services.AddScoped<IGetLyricsService, GetLyricsService>();
+        builder.Services.AddScoped<IUpdateDisplayNameService, UpdateDisplayNameService>();
+        builder.Services.AddScoped<IApproveChordService, ApproveChordService>();
         builder.Services.AddHttpClient<ISearchTracksService, SpotifySearchTracksService>();
         builder.Services.AddHttpClient("Lrclib", client =>
         {

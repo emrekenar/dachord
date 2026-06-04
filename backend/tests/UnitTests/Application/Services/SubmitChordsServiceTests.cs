@@ -3,6 +3,7 @@ using NSubstitute;
 using Xunit;
 
 using Domain.Interfaces;
+using Domain.Models.User;
 using Application.Interfaces;
 using Application.Requests;
 using Application.Services;
@@ -14,6 +15,7 @@ namespace UnitTests.Application.Services;
 public class SubmitChordsServiceTests
 {
     private readonly ISubmitChordsService _sut;
+    private readonly IUserRepository _userRepo;
 
     public SubmitChordsServiceTests()
     {
@@ -30,9 +32,18 @@ public class SubmitChordsServiceTests
         var trackRepo = Substitute.For<ITrackRepository>();
         trackRepo.GetTrackAsync("track001").Returns(existingTrack);
 
+        _userRepo = Substitute.For<IUserRepository>();
+        _userRepo.GetByIdAsync("user001").Returns(new User
+        {
+            Id = "user001",
+            Email = "user@test.com",
+            PasswordHash = "hash",
+            DisplayName = "User 1"
+        });
+
         var searchTracksService = Substitute.For<ISearchTracksService>();
         var logger = NullLogger<SubmitChordsService>.Instance;
-        _sut = new SubmitChordsService(trackRepo, searchTracksService, logger);
+        _sut = new SubmitChordsService(trackRepo, _userRepo, searchTracksService, logger);
     }
 
     [Fact]
@@ -43,7 +54,6 @@ public class SubmitChordsServiceTests
         {
             TrackId = "track001",
             ContributorId = "user001",
-            ContributorName = "User 1",
             ContributorEmail = "user@test.com",
             Content =
             [
@@ -86,20 +96,15 @@ public class SubmitChordsServiceTests
         result.Content[0].Lines[0].Chords["10"].Should().Be("Dm");
     }
 
-    [Theory]
-    [InlineData("track001", "user001", null, null, false)]
-    [InlineData("track001", "user001", "user@test.com", null, true)]
-    public async Task ExecuteAsync_InvalidRequest_ShouldReturnBadRequest(string trackId, string contributorId, 
-        string? contributorName, string? contributorEmail, bool isContentEmpty)
+    [Fact]
+    public async Task ExecuteAsync_EmptyContent_ShouldReturnBadRequest()
     {
         // Arrange
         var request = new SubmitChordsRequest
         {
-            TrackId = trackId,
-            ContributorId = contributorId,
-            ContributorName = contributorName,
-            ContributorEmail = contributorEmail,
-            Content = isContentEmpty ? [] : [ new Section {} ],
+            TrackId = "track001",
+            ContributorId = "user001",
+            Content = [],
         };
 
         // Act

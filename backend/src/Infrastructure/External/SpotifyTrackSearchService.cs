@@ -92,8 +92,10 @@ public class SpotifySearchTracksService : ISearchTracksService
         var content = await response.Content.ReadAsStringAsync();
         using var doc = JsonDocument.Parse(content);
         var root = doc.RootElement;
-        var images = root.GetProperty("album").GetProperty("images");
+        var album = root.GetProperty("album");
+        var images = album.GetProperty("images");
         var imageUrl = images.GetArrayLength() > 0 ? images[0].GetProperty("url").GetString() : null;
+        var releaseDate = album.TryGetProperty("release_date", out var rd) ? rd.GetString() : null;
 
         var track = new Track
         {
@@ -101,10 +103,11 @@ public class SpotifySearchTracksService : ISearchTracksService
             Title = root.GetProperty("name").GetString()!,
             ArtistId = root.GetProperty("artists")[0].GetProperty("id").GetString()!,
             ArtistName = root.GetProperty("artists")[0].GetProperty("name").GetString()!,
-            AlbumId = root.GetProperty("album").GetProperty("id").GetString()!,
-            AlbumName = root.GetProperty("album").GetProperty("name").GetString()!,
+            AlbumId = album.GetProperty("id").GetString()!,
+            AlbumName = album.GetProperty("name").GetString()!,
             ImageUrl = imageUrl,
             Url = root.GetProperty("external_urls").GetProperty("spotify").GetString(),
+            ReleaseYear = releaseDate?.Length >= 4 ? releaseDate[..4] : releaseDate,
         };
 
         _accessTokenCache.Set(cacheKey, track, TimeSpan.FromHours(24));
@@ -166,6 +169,8 @@ public class SpotifySearchTracksService : ISearchTracksService
         var albumName = root.GetProperty("name").GetString()!;
         var images = root.GetProperty("images");
         var imageUrl = images.GetArrayLength() > 0 ? images[0].GetProperty("url").GetString() : null;
+        var albumRd = root.TryGetProperty("release_date", out var albumRdProp) ? albumRdProp.GetString() : null;
+        var albumYear = albumRd?.Length >= 4 ? albumRd[..4] : albumRd;
         var items = root.GetProperty("tracks").GetProperty("items");
 
         var results = items.EnumerateArray()
@@ -180,6 +185,7 @@ public class SpotifySearchTracksService : ISearchTracksService
                 Url = item.TryGetProperty("external_urls", out var urls)
                     ? urls.GetProperty("spotify").GetString()!
                     : string.Empty,
+                ReleaseYear = albumYear,
             })
             .ToList();
 
@@ -220,15 +226,21 @@ public class SpotifySearchTracksService : ISearchTracksService
 
     private static List<TrackResponse> MapTrackItems(JsonElement items) =>
         items.EnumerateArray()
-            .Select(item => new TrackResponse
+            .Select(item =>
             {
-                TrackId = item.GetProperty("id").GetString()!,
-                Title = item.GetProperty("name").GetString()!,
-                ArtistId = item.GetProperty("artists")[0].GetProperty("id").GetString()!,
-                ArtistName = item.GetProperty("artists")[0].GetProperty("name").GetString()!,
-                AlbumId = item.GetProperty("album").GetProperty("id").GetString()!,
-                AlbumName = item.GetProperty("album").GetProperty("name").GetString()!,
-                Url = item.GetProperty("external_urls").GetProperty("spotify").GetString()!
+                var album = item.GetProperty("album");
+                var rd = album.TryGetProperty("release_date", out var rdProp) ? rdProp.GetString() : null;
+                return new TrackResponse
+                {
+                    TrackId = item.GetProperty("id").GetString()!,
+                    Title = item.GetProperty("name").GetString()!,
+                    ArtistId = item.GetProperty("artists")[0].GetProperty("id").GetString()!,
+                    ArtistName = item.GetProperty("artists")[0].GetProperty("name").GetString()!,
+                    AlbumId = album.GetProperty("id").GetString()!,
+                    AlbumName = album.GetProperty("name").GetString()!,
+                    Url = item.GetProperty("external_urls").GetProperty("spotify").GetString()!,
+                    ReleaseYear = rd?.Length >= 4 ? rd[..4] : rd,
+                };
             })
             .ToList();
 }
