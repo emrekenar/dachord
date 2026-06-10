@@ -36,6 +36,19 @@ public class SubmitChordsService(
 
         var user = await userRepository.GetByIdAsync(request.ContributorId);
         var trackVersion = TrackVersionDtoMapper.MapFromRequest(request, user?.DisplayName);
+
+        // Editing: when the contributor already has a version, preserve its
+        // accumulated likes/approval and mark it as updated rather than resetting.
+        var existingVersion = await trackRepository.GetTrackVersionAsync(request.TrackId, request.ContributorId);
+        if (existingVersion is not null)
+        {
+            trackVersion.LikeCount = existingVersion.LikeCount;
+            trackVersion.IsApproved = existingVersion.IsApproved;
+            trackVersion.ChordsUsed = existingVersion.ChordsUsed;
+            trackVersion.IsUpdated = true;
+            trackVersion.UpdatedAt = DateTime.UtcNow;
+        }
+
         await trackRepository.SaveTrackVersionAsync(trackVersion);
 
         var response = TrackVersionDtoMapper.MapToResponse(trackVersion);

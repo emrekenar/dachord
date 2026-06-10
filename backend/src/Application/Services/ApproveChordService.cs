@@ -7,9 +7,9 @@ using Application.Interfaces;
 
 public class ApproveChordService(ITrackRepository trackRepository) : IApproveChordService
 {
-    public async Task<Result<bool>> ExecuteAsync(string trackId)
+    public async Task<Result<bool>> ExecuteAsync(string trackId, string contributorId)
     {
-        var version = await trackRepository.GetTrackVersionAsync(trackId);
+        var version = await trackRepository.GetTrackVersionAsync(trackId, contributorId);
         if (version is null)
             return Result<bool>.Failure(new Error(ErrorCode.TrackNotFound, "Track version not found."));
 

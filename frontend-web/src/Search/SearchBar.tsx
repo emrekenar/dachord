@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSearchSuggestions, type TrackSuggestion } from './useSearchSuggestions';
 
 interface Props {
@@ -7,6 +8,7 @@ interface Props {
 }
 
 export default function SearchBar({ initialValue = '', onNavigate }: Props) {
+  const { t } = useTranslation();
   const [query, setQuery] = useState(initialValue);
   const [open, setOpen] = useState(false);
   const [dirty, setDirty] = useState(false);
@@ -51,7 +53,7 @@ export default function SearchBar({ initialValue = '', onNavigate }: Props) {
       <div className="search-form">
         <input
           type="text"
-          placeholder="Search by song or artist..."
+          placeholder={t('search.placeholder')}
           value={query}
           onChange={handleChange}
           onKeyDown={handleKeyDown}

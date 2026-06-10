@@ -64,6 +64,38 @@ cd backend/src/WebApi && dotnet run
 cd frontend-web && npm install && npm run dev
 ```
 
+### Admin & moderator accounts
+
+When the backend starts in the `Development` environment it seeds a default
+admin account (idempotent — only created if it doesn't already exist):
+
+```
+email:    admin@dachord.local
+password: admin1234
+```
+
+Log in with it to access the **Admin** page, where you can promote any user to
+**Moderator** (or **Admin**). Moderators and admins can also open the
+**Moderation** page to approve popular pending chord sheets.
+
+To create another admin manually, register a normal account, then either log in
+as the seeded admin and promote it from the Admin page, or set its `Role`
+attribute to `Admin` directly in DynamoDB (the `dachord-local-users` table).
+
+Admins can also promote a user straight from that user's profile page
+(`/users/{id}`), reachable by clicking a contributor's name on any chord sheet.
+
+### Editing, profiles & feedback
+
+- **Edit your own sheets** — open one of your chord sheets and use **Edit** to
+  re-open it in the editor. Saving overwrites your version while preserving its
+  likes and approval status.
+- **Contributor profiles** — a contributor's name on a chord page links to their
+  public profile (`/users/{id}`) showing their bio, avatar and stats.
+- **Feedback** — logged-in users can send feedback from the **Feedback** page;
+  submissions are stored in DynamoDB under a `FEEDBACK` partition in the
+  `dachord-local-tracks` table.
+
 ---
 
 ## Tests

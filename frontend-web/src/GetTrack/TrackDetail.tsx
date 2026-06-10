@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { apiFetch } from '../api';
 
 interface Track {
@@ -21,6 +22,7 @@ interface ChordVersion {
 }
 
 export default function TrackDetail() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const [track, setTrack] = useState<Track | null>(null);
   const [versions, setVersions] = useState<ChordVersion[]>([]);
@@ -37,7 +39,7 @@ export default function TrackDetail() {
     }).catch(() => setLoading(false));
   }, [id]);
 
-  if (loading) return <div className="track-detail"><p>Loading…</p></div>;
+  if (loading) return <div className="track-detail"><p>{t('common.loading')}</p></div>;
 
   return (
     <div className="track-detail">
@@ -53,7 +55,7 @@ export default function TrackDetail() {
               <p className="album-name">{track.albumName}{track.releaseYear ? ` (${track.releaseYear})` : ''}</p>
               {track.url && (
                 <a href={track.url} target="_blank" rel="noopener noreferrer" className="spotify-link">
-                  Open on Spotify
+                  {t('track.openOnSpotify')}
                 </a>
               )}
             </div>
@@ -61,10 +63,10 @@ export default function TrackDetail() {
 
           {versions.length > 0 ? (
             <div className="chord-versions-list">
-              <h3>Chord Sheets</h3>
+              <h3>{t('track.chordSheets')}</h3>
               {versions.map((v, i) => (
                 <Link key={i} to={`/chords/${v.trackId}`} className="chord-version-item">
-                  <span className="contributor-name">{v.contributorName ?? 'Anonymous'}</span>
+                  <span className="contributor-name">{v.contributorName ?? t('track.anonymous')}</span>
                   {v.isApproved && <span className="approved-badge">✓</span>}
                   <span className="like-count">♥ {v.likeCount}</span>
                 </Link>
@@ -72,13 +74,13 @@ export default function TrackDetail() {
             </div>
           ) : (
             <p className="empty-state" style={{ marginTop: '1.5rem' }}>
-              No chord sheets yet for this track.{' '}
-              <Link to={`/submit/${id}`}>Be the first to add one!</Link>
+              {t('track.noSheets')}{' '}
+              <Link to={`/submit/${id}`}>{t('track.beFirst')}</Link>
             </p>
           )}
         </>
       ) : (
-        <p className="empty-state">Track not found.</p>
+        <p className="empty-state">{t('track.notFound')}</p>
       )}
     </div>
   );

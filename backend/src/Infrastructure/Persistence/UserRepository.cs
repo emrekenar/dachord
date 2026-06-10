@@ -53,4 +53,28 @@ public class UserRepository(IDynamoDBContext dynamoDbContext, IAmazonDynamoDB dy
         item.DisplayName = displayName;
         await dynamoDbContext.SaveAsync(item);
     }
+
+    public async Task UpdateProfileAsync(string userId, string? bio, string? avatarIcon)
+    {
+        var item = await dynamoDbContext.LoadAsync<UserItem>(userId);
+        if (item is null) return;
+        if (bio is not null) item.Bio = bio;
+        if (avatarIcon is not null) item.AvatarIcon = avatarIcon;
+        await dynamoDbContext.SaveAsync(item);
+    }
+
+    public async Task UpdateRoleAsync(string userId, UserRole role)
+    {
+        var item = await dynamoDbContext.LoadAsync<UserItem>(userId);
+        if (item is null) return;
+        item.Role = UserMapper.MapToEntityRole(role);
+        await dynamoDbContext.SaveAsync(item);
+    }
+
+    public async Task<IEnumerable<User>> GetAllUsersAsync()
+    {
+        var scan = dynamoDbContext.ScanAsync<UserItem>(new List<ScanCondition>());
+        var items = await scan.GetRemainingAsync();
+        return items.Select(UserMapper.MapToDomainModel);
+    }
 }

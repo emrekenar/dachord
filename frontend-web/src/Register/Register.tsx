@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { apiFetch } from '../api';
 
 export default function Register() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
@@ -25,24 +27,24 @@ export default function Register() {
           }).then(r => r.json()).then(d => {
             if (d?.token) {
               localStorage.setItem('token', d.token);
-              navigate('/', { state: { toast: 'Registered successfully!' } });
+              navigate('/', { state: { toast: t('register.success') } });
             }
           });
         }
-        setMessage(res.status === 400 ? 'Email already in use.' : 'Failed to register.');
+        setMessage(res.status === 400 ? t('register.emailInUse') : t('register.failed'));
       })
-      .catch(() => setMessage('Failed to register.'));
+      .catch(() => setMessage(t('register.failed')));
   }
 
   return (
     <div className="register-page">
-      <h2>Register</h2>
+      <h2>{t('register.title')}</h2>
       <form className="register-form" onSubmit={handleSubmit}>
-        <label htmlFor="email">Email</label>
-        <input id="email" name="email" type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} />
-        <label htmlFor="password">Password</label>
-        <input id="password" name="password" type="password" placeholder="Enter your password" value={password} onChange={e => setPassword(e.target.value)} />
-        <button type="submit">Register</button>
+        <label htmlFor="email">{t('register.email')}</label>
+        <input id="email" name="email" type="email" placeholder={t('register.emailPlaceholder')} value={email} onChange={e => setEmail(e.target.value)} />
+        <label htmlFor="password">{t('register.password')}</label>
+        <input id="password" name="password" type="password" placeholder={t('register.passwordPlaceholder')} value={password} onChange={e => setPassword(e.target.value)} />
+        <button type="submit">{t('register.submit')}</button>
       </form>
       {message && <div className="submit-message">{message}</div>}
     </div>

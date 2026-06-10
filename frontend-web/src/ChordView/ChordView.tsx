@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { apiFetch } from '../api';
+import { canModerate, getUserId } from '../auth';
 
 interface Line {
   lyrics: string;
@@ -56,16 +58,8 @@ function buildChordLine(lyrics: string, chords: Record<string, string>): string 
   return chars.join('').trimEnd();
 }
 
-function getRoleFromToken(): string | null {
-  const token = localStorage.getItem('token');
-  if (!token) return null;
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return payload.role ?? null;
-  } catch { return null; }
-}
-
 export default function ChordView() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const [version, setVersion] = useState<TrackVersion | null>(null);
@@ -73,7 +67,8 @@ export default function ChordView() {
   const [notFound, setNotFound] = useState(false);
 
   const [trackInfo, setTrackInfo] = useState<TrackInfo | null>(null);
-  const isModerator = getRoleFromToken() === 'Moderator';
+  const isModerator = canModerate();
+  const isOwner = version != null && version.contributorId === getUserId();
 
   useEffect(() => {
     apiFetch(`/chords/${id}`)
@@ -92,8 +87,9 @@ export default function ChordView() {
   }, [id]);
 
   async function handleApprove() {
+    if (!version) return;
     const token = localStorage.getItem('token');
-    const res = await apiFetch(`/chords/${id}/approve`, {
+    const res = await apiFetch(`/chords/${id}/approve/${version.contributorId}`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -102,11 +98,11 @@ export default function ChordView() {
     }
   }
 
-  if (loading) return <div className="chord-view-page"><p>Loading…</p></div>;
+  if (loading) return <div className="chord-view-page"><p>{t('common.loading')}</p></div>;
   if (notFound || !version) return (
     <div className="chord-view-page">
-      <p>Chord sheet not found.</p>
-      <button className="back-link" onClick={() => navigate(-1)}>← Back to search</button>
+      <p>{t('chordView.notFound')}</p>
+      <button className="back-link" onClick={() => navigate(-1)}>{t('chordView.backToSearch')}</button>
     </div>
   );
 
@@ -125,14 +121,31 @@ export default function ChordView() {
         </div>
       )}
       <div className="chord-view-meta">
-        <span>by {version.contributorName ?? 'Anonymous'}</span>
-        {version.isApproved && <span className="approved-badge">✓ approved</span>}
+        <span>
+          {t('chordView.byLabel')}{' '}
+          {version.contributorId ? (
+            <Link to={`/users/${version.contributorId}`} className="contributor-link">
+              {version.contributorName ?? t('chordView.anonymous')}
+            </Link>
+          ) : (
+            version.contributorName ?? t('chordView.anonymous')
+          )}
+        </span>
+        {version.isApproved && <span className="approved-badge">{t('chordView.approved')}</span>}
+        {isOwner && (
+          <button
+            className="btn-ghost"
+            onClick={() => navigate(`/submit/${version.trackId}`, { state: { editSections: version.content } })}
+          >
+            {t('chordView.edit')}
+          </button>
+        )}
         {isModerator && (
           <button
             className={`btn-approve${version.isApproved ? ' unapprove' : ''}`}
             onClick={handleApprove}
           >
-            {version.isApproved ? 'Unapprove' : 'Approve'}
+            {version.isApproved ? t('chordView.unapprove') : t('chordView.approve')}
           </button>
         )}
       </div>

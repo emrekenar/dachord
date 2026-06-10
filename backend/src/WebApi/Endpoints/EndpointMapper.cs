@@ -34,7 +34,15 @@ public static class EndpointMapper
             if (userId is null) return Results.Unauthorized();
             var user = await userRepository.GetByIdAsync(userId);
             return user is not null
-                ? Results.Ok(new { displayName = user.DisplayName, role = user.Role.ToString() })
+                ? Results.Ok(new
+                {
+                    displayName = user.DisplayName,
+                    bio = user.Bio,
+                    avatarIcon = user.AvatarIcon,
+                    role = user.Role.ToString(),
+                    numberOfApprovedSongs = user.NumberOfApprovedSongs,
+                    numberOfLikes = user.NumberOfLikes,
+                })
                 : Results.NotFound();
         })
         .RequireAuthorization();
@@ -47,6 +55,70 @@ public static class EndpointMapper
             return Results.Ok();
         })
         .RequireAuthorization();
+
+        app.MapPut("/user/profile", async (UpdateProfileRequest request, HttpContext ctx, IUserRepository userRepository) =>
+        {
+            var userId = ctx.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId is null) return Results.Unauthorized();
+            await userRepository.UpdateProfileAsync(userId, request.Bio, request.AvatarIcon);
+            return Results.Ok();
+        })
+        .RequireAuthorization();
+
+        // Public profile — non-sensitive fields only (no email).
+        app.MapGet("/user/{id}", async (string id, IUserRepository userRepository) =>
+        {
+            var user = await userRepository.GetByIdAsync(id);
+            return user is not null
+                ? Results.Ok(new
+                {
+                    displayName = user.DisplayName,
+                    bio = user.Bio,
+                    avatarIcon = user.AvatarIcon,
+                    role = user.Role.ToString(),
+                    numberOfApprovedSongs = user.NumberOfApprovedSongs,
+                    numberOfLikes = user.NumberOfLikes,
+                })
+                : Results.NotFound();
+        });
+
+        app.MapPost("/feedback", async (SubmitFeedbackRequest request, HttpContext ctx, IFeedbackService feedbackService) =>
+        {
+            var userId = ctx.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId is null) return Results.Unauthorized();
+            var email = ctx.User.FindFirst(ClaimTypes.Email)?.Value;
+            var result = await feedbackService.ExecuteAsync(userId, email, request.Message);
+            return result.IsSuccess ? Results.Ok() : Results.BadRequest(result.Error);
+        })
+        .RequireAuthorization();
+
+        MapAdminEndpoints(app);
+    }
+
+    private static void MapAdminEndpoints(WebApplication app)
+    {
+        app.MapGet("/admin/users", async (IUserRepository userRepository) =>
+        {
+            var users = await userRepository.GetAllUsersAsync();
+            return Results.Ok(users.Select(u => new
+            {
+                id = u.Id,
+                email = u.Email,
+                displayName = u.DisplayName,
+                avatarIcon = u.AvatarIcon,
+                role = u.Role.ToString(),
+            }));
+        })
+        .RequireAuthorization("AdminOnly");
+
+        app.MapPut("/admin/users/{userId}/role", async (string userId, UpdateRoleRequest request, IUserRepository userRepository) =>
+        {
+            if (!Enum.TryParse<Domain.Models.User.UserRole>(request.Role, ignoreCase: true, out var role))
+                return Results.BadRequest("Invalid role.");
+            await userRepository.UpdateRoleAsync(userId, role);
+            return Results.Ok();
+        })
+        .RequireAuthorization("AdminOnly");
     }
 
     private static void MapTrackEndpoints(WebApplication app)
@@ -103,12 +175,19 @@ public static class EndpointMapper
         })
         .RequireAuthorization();
 
-        app.MapPost("/chords/{trackId}/approve", async (string trackId, HttpContext ctx, IApproveChordService approveService) =>
+        app.MapPost("/chords/{trackId}/approve/{contributorId}", async (string trackId, string contributorId, IApproveChordService approveService) =>
         {
-            var result = await approveService.ExecuteAsync(trackId);
+            var result = await approveService.ExecuteAsync(trackId, contributorId);
             return result.IsSuccess ? Results.Ok() : Results.NotFound(result.Error);
         })
-        .RequireAuthorization();
+        .RequireAuthorization("ModeratorOrAdmin");
+
+        app.MapGet("/moderation/queue", async (IModerationQueueService moderationQueueService) =>
+        {
+            var items = await moderationQueueService.ExecuteAsync(minLikes: 2);
+            return Results.Ok(items);
+        })
+        .RequireAuthorization("ModeratorOrAdmin");
     }
 
     private static void MapTestEndpoints(WebApplication app)
