@@ -13,6 +13,8 @@ public class UserMapper
             Email = entity.Email!,
             PasswordHash = entity.PasswordHash!,
             DisplayName = entity.DisplayName ?? string.Empty,
+            Bio = entity.Bio ?? string.Empty,
+            AvatarIcon = entity.AvatarIcon ?? string.Empty,
             Role = MapToDomainRole(entity.Role),
             NumberOfApprovedSongs = entity.NumberOfApprovedSongs,
             NumberOfLikes = entity.NumberOfLikes,
@@ -27,6 +29,8 @@ public class UserMapper
             Email = user.Email,
             PasswordHash = user.PasswordHash,
             DisplayName = user.DisplayName,
+            Bio = user.Bio,
+            AvatarIcon = user.AvatarIcon,
             Role = MapToEntityRole(user.Role),
             NumberOfApprovedSongs = user.NumberOfApprovedSongs,
             NumberOfLikes = user.NumberOfLikes,
@@ -39,6 +43,7 @@ public class UserMapper
         {
             UserRole.User => UserRoleEnum.User,
             UserRole.Moderator => UserRoleEnum.Moderator,
+            UserRole.Admin => UserRoleEnum.Admin,
             _ => throw new ArgumentOutOfRangeException(nameof(role), $"Unexpected role value: {role}"),
         };
     }
@@ -49,6 +54,7 @@ public class UserMapper
         {
             UserRoleEnum.User => UserRole.User,
             UserRoleEnum.Moderator => UserRole.Moderator,
+            UserRoleEnum.Admin => UserRole.Admin,
             _ => throw new ArgumentOutOfRangeException(nameof(roleEnum), $"Unexpected role enum value: {roleEnum}"),
         };
     }

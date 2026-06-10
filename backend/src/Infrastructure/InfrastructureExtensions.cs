@@ -54,6 +54,7 @@ public static class InfrastructureExtensions
 
         services.AddSingleton<ITrackRepository, TrackRepository>();
         services.AddSingleton<IUserRepository, UserRepository>();
+        services.AddSingleton<IFeedbackRepository, FeedbackRepository>();
         return services;
     }
 }

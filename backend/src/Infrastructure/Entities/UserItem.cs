@@ -18,6 +18,12 @@ public class UserItem
     public string DisplayName { get; set; } = string.Empty;
 
     [DynamoDBProperty]
+    public string Bio { get; set; } = string.Empty;
+
+    [DynamoDBProperty]
+    public string AvatarIcon { get; set; } = string.Empty;
+
+    [DynamoDBProperty]
     public UserRoleEnum Role { get; set; } = UserRoleEnum.User;
 
     [DynamoDBProperty]
@@ -33,7 +39,10 @@ public enum UserRoleEnum
     User,
 
     [DynamoDBProperty("Moderator")]
-    Moderator
+    Moderator,
+
+    [DynamoDBProperty("Admin")]
+    Admin
 }
 
 public static class UserEntity

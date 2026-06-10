@@ -49,4 +49,6 @@ app.UseAuthorization();
 
 EndpointMapper.MapEndpoints(app);
 
+await DevDataSeeder.SeedAsync(app);
+
 app.Run();

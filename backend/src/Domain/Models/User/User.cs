@@ -9,6 +9,8 @@ public class User
     public required string PasswordHash { get; set; }
 
     public string DisplayName { get; set; } = string.Empty;
+    public string Bio { get; set; } = string.Empty;
+    public string AvatarIcon { get; set; } = string.Empty;
     public UserRole Role { get; set; } = UserRole.User;
     public int NumberOfApprovedSongs { get; set; }
     public int NumberOfLikes { get; set; }

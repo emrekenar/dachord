@@ -8,4 +8,7 @@ public interface IUserRepository
     Task<User?> GetByEmailAsync(string email);
     Task CreateUserAsync(User user);
     Task UpdateDisplayNameAsync(string userId, string displayName);
+    Task UpdateProfileAsync(string userId, string? bio, string? avatarIcon);
+    Task UpdateRoleAsync(string userId, UserRole role);
+    Task<IEnumerable<User>> GetAllUsersAsync();
 }

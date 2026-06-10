@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { apiFetch } from '../api';
 import ChordLine, { type LineData } from './ChordLine';
 
@@ -49,8 +50,12 @@ function getContributorFromToken(): { id: string; email: string; displayName: st
 }
 
 export default function SubmitChord() {
+  const { t } = useTranslation();
   const { trackId } = useParams<{ trackId?: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const editSections = (location.state as { editSections?: ApiSection[] } | null)?.editSections;
+  const isEditing = !!editSections && editSections.length > 0;
   const [query, setQuery] = useState('');
   const [trackResults, setTrackResults] = useState<TrackResult[]>([]);
   const [searching, setSearching] = useState(false);
@@ -65,8 +70,26 @@ export default function SubmitChord() {
     apiFetch(`/track/${trackId}`)
       .then(res => (res.ok ? res.json() : null))
       .then(data => {
-        if (data)
-          selectTrack({ trackId: data.id, title: data.title, artistName: data.artistName, albumName: data.albumName });
+        if (!data) return;
+        const track = { trackId: data.id, title: data.title, artistName: data.artistName, albumName: data.albumName };
+        if (isEditing) {
+          setSelectedTrack(track);
+          setTrackResults([]);
+          setSections(editSections!.map(s => ({
+            id: crypto.randomUUID(),
+            type: s.type || null,
+            lines: s.lines.map(l => ({
+              id: crypto.randomUUID(),
+              lyrics: l.lyrics,
+              chords: Object.entries(l.chords).map(([pos, chord]) => ({ position: Number(pos), chord })),
+              timeMs: l.timeMs,
+            })),
+          })));
+          setLyricsStatus('done');
+          setMessage('');
+        } else {
+          selectTrack(track);
+        }
       });
   }, [trackId]);
 
@@ -99,7 +122,7 @@ export default function SubmitChord() {
   async function importLyrics() {
     if (!selectedTrack) return;
     const token = localStorage.getItem('token');
-    if (!token) { setMessage('Please log in to import lyrics.'); return; }
+    if (!token) { setMessage(t('submit.loginToImport')); return; }
 
     setLyricsStatus('loading');
     setMessage('');
@@ -169,9 +192,9 @@ export default function SubmitChord() {
 
   async function handleSubmit() {
     const contributor = getContributorFromToken();
-    if (!contributor) { setMessage('Please log in to submit.'); return; }
-    if (!selectedTrack) { setMessage('Please select a track.'); return; }
-    if (sections.length === 0) { setMessage('Add at least one section.'); return; }
+    if (!contributor) { setMessage(t('submit.loginToSubmit')); return; }
+    if (!selectedTrack) { setMessage(t('submit.selectTrack')); return; }
+    if (sections.length === 0) { setMessage(t('submit.addSection')); return; }
 
     setSubmitting(true);
     setMessage('');
@@ -197,10 +220,10 @@ export default function SubmitChord() {
           })),
         }),
       });
-      if (res.ok) { sessionStorage.setItem('toast', 'Chord sheet submitted!'); navigate(-1); return; }
-      else if (res.status === 401) setMessage('Please log in to submit.');
-      else if (res.status === 400) setMessage('Invalid request — check all fields.');
-      else setMessage('Failed to submit.');
+      if (res.ok) { sessionStorage.setItem('toast', t('submit.submitted')); navigate(-1); return; }
+      else if (res.status === 401) setMessage(t('submit.loginToSubmit'));
+      else if (res.status === 400) setMessage(t('submit.invalidRequest'));
+      else setMessage(t('submit.failed'));
     } finally {
       setSubmitting(false);
     }
@@ -208,20 +231,20 @@ export default function SubmitChord() {
 
   return (
     <div className="submit-chord-page">
-      <h2>Submit Chord Sheet</h2>
+      <h2>{isEditing ? t('submit.editTitle') : t('submit.title')}</h2>
 
       {!selectedTrack ? (
         <div className="track-search-section">
-          <p className="section-hint">Find the track you want to add chords for.</p>
+          <p className="section-hint">{t('submit.findTrack')}</p>
           <form className="search-form" onSubmit={searchTracks}>
             <input
               type="text"
-              placeholder="Search by song or artist…"
+              placeholder={t('submit.placeholder')}
               value={query}
               onChange={e => setQuery(e.target.value)}
             />
             <button type="submit" disabled={searching || query.length < 2}>
-              {searching ? 'Searching…' : 'Search'}
+              {searching ? t('submit.searching') : t('submit.search')}
             </button>
           </form>
           {trackResults.length > 0 && (
@@ -245,7 +268,7 @@ export default function SubmitChord() {
               <span>{selectedTrack.artistName}</span>
             </div>
             <button className="btn-ghost" onClick={() => { setSelectedTrack(null); setSections([]); setMessage(''); }}>
-              Change track
+              {t('submit.changeTrack')}
             </button>
           </div>
 
@@ -256,19 +279,19 @@ export default function SubmitChord() {
               onClick={importLyrics}
               disabled={lyricsStatus === 'loading'}
             >
-              {lyricsStatus === 'loading' ? 'Fetching lyrics…' : lyricsStatus === 'done' ? 'Re-import lyrics' : 'Import lyrics'}
+              {lyricsStatus === 'loading' ? t('submit.fetchingLyrics') : lyricsStatus === 'done' ? t('submit.reimportLyrics') : t('submit.importLyrics')}
             </button>
             {lyricsStatus === 'loading' && (
-              <span className="import-status import-status--info">Hang on, this can take a few seconds…</span>
+              <span className="import-status import-status--info">{t('submit.importInfo')}</span>
             )}
             {lyricsStatus === 'done' && (
-              <span className="import-status import-status--ok">Lyrics imported — add chords by clicking above any line.</span>
+              <span className="import-status import-status--ok">{t('submit.importOk')}</span>
             )}
             {lyricsStatus === 'not_found' && (
-              <span className="import-status import-status--warn">Lyrics not found — add them manually.</span>
+              <span className="import-status import-status--warn">{t('submit.importNotFound')}</span>
             )}
             {lyricsStatus === 'error' && (
-              <span className="import-status import-status--err">Couldn't fetch lyrics. Try again or add manually.</span>
+              <span className="import-status import-status--err">{t('submit.importError')}</span>
             )}
           </div>
 
@@ -283,15 +306,15 @@ export default function SubmitChord() {
                       value={section.type}
                       onChange={e => updateSectionType(sIdx, e.target.value || null)}
                     >
-                      <option value="">— remove label —</option>
-                      {SECTION_TYPES.map(t => <option key={t}>{t}</option>)}
+                      <option value="">{t('submit.removeLabel')}</option>
+                      {SECTION_TYPES.map(type => <option key={type}>{type}</option>)}
                     </select>
                   ) : (
                     <button className="btn-add-label" onClick={() => updateSectionType(sIdx, 'Verse')}>
-                      + label
+                      {t('submit.addLabel')}
                     </button>
                   )}
-                  <button className="btn-danger-sm" onClick={() => deleteSection(sIdx)}>Delete part</button>
+                  <button className="btn-danger-sm" onClick={() => deleteSection(sIdx)}>{t('submit.deletePart')}</button>
                 </div>
 
                 {section.lines.map((line, lIdx) => (
@@ -305,7 +328,7 @@ export default function SubmitChord() {
                   />
                 ))}
 
-                <button className="btn-add-line" onClick={() => addLine(sIdx)}>+ Add line</button>
+                <button className="btn-add-line" onClick={() => addLine(sIdx)}>{t('submit.addLine')}</button>
 
                 {sIdx < sections.length - 1 && <hr className="section-break" />}
               </div>
@@ -313,10 +336,10 @@ export default function SubmitChord() {
           </div>
 
           <div className="editor-actions">
-            <button className="btn-add-part" onClick={addSection}>+ Add part</button>
+            <button className="btn-add-part" onClick={addSection}>{t('submit.addPart')}</button>
             {sections.length > 0 && (
               <button className="btn-submit" onClick={handleSubmit} disabled={submitting}>
-                {submitting ? 'Submitting…' : 'Submit chord sheet'}
+                {submitting ? t('submit.submitting') : t('submit.submit')}
               </button>
             )}
           </div>

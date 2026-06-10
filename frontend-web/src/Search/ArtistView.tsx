@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { apiFetch } from '../api';
 import SearchResults, { type TrackVersionsPair } from './SearchResults';
 
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export default function ArtistView({ artistId }: Props) {
+  const { t } = useTranslation();
   const [albums, setAlbums] = useState<AlbumInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -51,8 +53,8 @@ export default function ArtistView({ artistId }: Props) {
     }
   }
 
-  if (loading) return <p className="loading-state">Loading albums…</p>;
-  if (albums.length === 0) return <p className="empty-state">No albums found.</p>;
+  if (loading) return <p className="loading-state">{t('search.loadingAlbums')}</p>;
+  if (albums.length === 0) return <p className="empty-state">{t('search.noAlbums')}</p>;
 
   return (
     <div className="artist-discography">
@@ -76,7 +78,7 @@ export default function ArtistView({ artistId }: Props) {
             {isExpanded && (
               <div className="album-tracks">
                 {isLoadingTracks ? (
-                  <p className="loading-state">Loading tracks…</p>
+                  <p className="loading-state">{t('search.loadingTracks')}</p>
                 ) : (
                   <SearchResults results={tracks ?? []} hideAlbum />
                 )}

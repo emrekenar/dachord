@@ -1,7 +1,9 @@
 import './App.css';
 import { useState, useEffect } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import SearchBar from './Search/SearchBar';
+import { canModerate, isAdmin } from './auth';
 
 function isTokenValid(): boolean {
   const token = localStorage.getItem('token');
@@ -22,12 +24,17 @@ function isTokenValid(): boolean {
 function App() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t, i18n } = useTranslation();
   const [isLoggedIn, setIsLoggedIn] = useState(isTokenValid);
   const [toast, setToast] = useState('');
 
   useEffect(() => {
     setIsLoggedIn(isTokenValid());
   }, [location]);
+
+  function toggleLanguage() {
+    i18n.changeLanguage(i18n.language.startsWith('tr') ? 'en' : 'tr');
+  }
 
   useEffect(() => {
     const msg = (location.state as { toast?: string } | null)?.toast
@@ -45,8 +52,11 @@ function App() {
     localStorage.removeItem('token');
     setIsLoggedIn(false);
     navigate('/');
-    setToast('Logged out!');
+    setToast(t('common.loggedOut'));
   }
+
+  const showModeration = isLoggedIn && canModerate();
+  const showAdmin = isLoggedIn && isAdmin();
 
   return (
     <>
@@ -54,19 +64,37 @@ function App() {
         <div className="app-header-top">
           <Link to="/" className="app-logo">dachord</Link>
           <nav>
+            {showModeration && (
+              <>
+                <Link to="/moderation" className="nav-profile-link">{t('nav.moderation')}</Link>
+                <span className="nav-sep">|</span>
+              </>
+            )}
+            {showAdmin && (
+              <>
+                <Link to="/admin" className="nav-profile-link">{t('nav.admin')}</Link>
+                <span className="nav-sep">|</span>
+              </>
+            )}
             {isLoggedIn ? (
               <>
-                <Link to="/profile" className="nav-profile-link">Profile</Link>
+                <Link to="/feedback" className="nav-profile-link">{t('nav.feedback')}</Link>
                 <span className="nav-sep">|</span>
-                <button className="nav-logout-btn" onClick={handleLogout}>Log out</button>
+                <Link to="/profile" className="nav-profile-link">{t('nav.profile')}</Link>
+                <span className="nav-sep">|</span>
+                <button className="nav-logout-btn" onClick={handleLogout}>{t('nav.logout')}</button>
               </>
             ) : (
               <>
-                <Link to="/register">Register</Link>
+                <Link to="/register">{t('nav.register')}</Link>
                 <span className="nav-sep">|</span>
-                <Link to="/login">Log in</Link>
+                <Link to="/login">{t('nav.login')}</Link>
               </>
             )}
+            <span className="nav-sep">|</span>
+            <button className="nav-lang-btn" onClick={toggleLanguage}>
+              {i18n.language.startsWith('tr') ? 'EN' : 'TR'}
+            </button>
           </nav>
         </div>
         {!isSearchPage && (

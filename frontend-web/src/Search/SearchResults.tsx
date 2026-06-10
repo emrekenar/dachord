@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 interface TrackResponse {
   trackId: string;
@@ -24,6 +25,7 @@ interface Props {
 }
 
 export default function SearchResults({ results, hideAlbum = false }: Props) {
+  const { t } = useTranslation();
   const sorted = [...results].sort((a, b) => b.versions.length - a.versions.length);
 
   return (
@@ -37,22 +39,22 @@ export default function SearchResults({ results, hideAlbum = false }: Props) {
           </div>
           <div className="track-versions-summary">
             {versions.length === 0 ? (
-              <span className="versions-badge zero">0 chord sheets</span>
+              <span className="versions-badge zero">{t('results.chordSheets', { count: 0 })}</span>
             ) : (
-              <span className="versions-badge has-versions">{versions.length} chord sheet{versions.length !== 1 ? 's' : ''}</span>
+              <span className="versions-badge has-versions">{t('results.chordSheets', { count: versions.length })}</span>
             )}
             {versions.length === 0 ? (
               <div className="no-versions">
-                <Link to={`/submit/${track.trackId}`}>Add one?</Link>
+                <Link to={`/submit/${track.trackId}`}>{t('results.addOne')}</Link>
               </div>
             ) : (
               <ul className="versions-list">
                 {versions.map((v, i) => (
                   <li key={i} className="version-item">
                     <Link to={`/chords/${track.trackId}`}>
-                      {v.contributorName ? `by ${v.contributorName}` : 'View chords'}
+                      {v.contributorName ? t('results.by', { name: v.contributorName }) : t('results.viewChords')}
                     </Link>
-                    {v.isApproved && <span className="approved-badge">✓ approved</span>}
+                    {v.isApproved && <span className="approved-badge">{t('results.approved')}</span>}
                   </li>
                 ))}
               </ul>

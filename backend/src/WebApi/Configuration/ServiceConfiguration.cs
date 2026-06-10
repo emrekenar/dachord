@@ -28,6 +28,8 @@ public static class ServiceConfiguration
         builder.Services.AddScoped<IGetLyricsService, GetLyricsService>();
         builder.Services.AddScoped<IUpdateDisplayNameService, UpdateDisplayNameService>();
         builder.Services.AddScoped<IApproveChordService, ApproveChordService>();
+        builder.Services.AddScoped<IModerationQueueService, ModerationQueueService>();
+        builder.Services.AddScoped<IFeedbackService, FeedbackService>();
         builder.Services.AddHttpClient<ISearchTracksService, SpotifySearchTracksService>();
         builder.Services.AddHttpClient("Lrclib", client =>
         {
@@ -65,7 +67,11 @@ public static class ServiceConfiguration
             };
         });
 
-        builder.Services.AddAuthorization();
+        builder.Services.AddAuthorization(options =>
+        {
+            options.AddPolicy("ModeratorOrAdmin", policy => policy.RequireRole("Moderator", "Admin"));
+            options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+        });
 
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(c =>
